@@ -290,6 +290,111 @@
             font-size: 1.5em;
             margin-bottom: 20px;
             color: #00ff88;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .upload-button {
+            background: #00ff88;
+            color: #1a1a1a;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9em;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .upload-button:hover {
+            background: #00cc6a;
+            transform: scale(1.05);
+        }
+
+        .upload-button i {
+            font-size: 1.2em;
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        .upload-progress {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.9);
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid #00ff88;
+            display: none;
+            z-index: 1000;
+            min-width: 300px;
+        }
+
+        .upload-progress.active {
+            display: block;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .progress-bar-upload {
+            width: 100%;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 2px;
+            margin-top: 10px;
+            overflow: hidden;
+        }
+
+        .progress-bar-upload-fill {
+            height: 100%;
+            background: #00ff88;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .upload-status {
+            color: #00ff88;
+            font-size: 0.9em;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .upload-error {
+            color: #ff4444;
+            font-size: 0.9em;
+            margin-top: 5px;
+            display: none;
+        }
+
+        .upload-error.active {
+            display: block;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
         }
 
         .track-list {
@@ -588,7 +693,13 @@
             </div>
 
             <div class="playlist">
-                <h3 class="playlist-title">Playlist</h3>
+                <div class="playlist-title">
+                    <h3>Playlist</h3>
+                    <button class="upload-button" onclick="document.getElementById('fileInput').click()">
+                        <i>📁</i> Upload
+                    </button>
+                </div>
+                <input type="file" id="fileInput" accept="audio/*" multiple onchange="handleFileUpload(event)">
                 <div class="search-container">
                     <span class="search-icon">🔍</span>
                     <input type="text" class="search-input" placeholder="Buscar músicas..." id="searchInput">
@@ -600,6 +711,13 @@
         </div>
     </div>
 
+    <div class="upload-progress">
+        <div class="upload-status">Uploading...</div>
+        <div class="progress-bar-upload">
+            <div class="progress-bar-upload-fill"></div>
+        </div>
+    </div>
+
     <script>
         const playlist = [
             {
@@ -608,7 +726,8 @@
                 album: "A História Continua",
                 duration: "3:45",
                 cover: "musics/alo.jpeg",
-                file: "musics/Alô.mp3"
+                file: "musics/Alô.mp3",
+                trackNumber: 1
             },
             {
                 title: "Evidências",
@@ -616,23 +735,44 @@
                 album: "A História Continua",
                 duration: "6:32",
                 cover: "musics/evidencias.jpg",
-                file: "musics/Evidências.mp3"
+                file: "musics/Evidências.mp3",
+                trackNumber: 2
+            },
+            {
+                title: "Dois rolês",
+                artist: "Edson Mega Pegação",
+                album: "Mega Pegação",
+                duration: "0:00",
+                cover: "musics/Edson.jpg",
+                file: "musics/Dois rolês.mp3",
+                trackNumber: 3
             },
             {
                 title: "Nem sei",
                 artist: "Edson Mega Pegação",
                 album: "Mega Pegação",
                 duration: "4:20",
-                cover: "musics/Edson .jpg",
-                file: "musics/Nem sei- Edson Mega Pegação.mp3"
+                cover: "musics/Edson.jpg",
+                file: "musics/Nem sei- Edson Mega Pegação.mp3",
+                trackNumber: 4
             },
             {
                 title: "Sou eu",
                 artist: "Edson Mega Pegação",
                 album: "Romatiquinho",
                 duration: "4:15",
-                cover: "musics/Edson .jpg",
-                file: "musics/Sou eu.mp3"
+                cover: "musics/Edson.jpg",
+                file: "musics/Sou eu.mp3",
+                trackNumber: 5
+            },
+            {
+                title: "Baqueado",
+                artist: "Panda",
+                album: "Single",
+                duration: "0:00",
+                cover: "musics/panda.jpg",
+                file: "musics/Baqueado-Panda.mp3",
+                trackNumber: 6
             },
             {
                 title: "Erro Gostoso",
@@ -640,7 +780,17 @@
                 album: "Ao Vivo",
                 duration: "3:30",
                 cover: "musics/simone.jpeg",
-                file: "musics/01 - Erro Gostoso (Ao Vivo).mp3"
+                file: "musics/01 - Erro Gostoso (Ao Vivo).mp3",
+                trackNumber: 7
+            },
+            {
+                title: "Bijoteria",
+                artist: "Simone",
+                album: "Ao Vivo",
+                duration: "0:00",
+                cover: "musics/bijoteria.jpeg",
+                file: "musics/02-BIJOTERIA.MP3",
+                trackNumber: 8
             }
         ];
 
@@ -753,31 +903,50 @@
                     resolve(`${minutes}:${seconds.toString().padStart(2, '0')}`);
                 });
                 audio.addEventListener('error', () => {
+                    console.error(`Erro ao carregar áudio: ${file}`);
                     resolve('0:00');
                 });
             });
         }
 
-        // Função para ordenar a playlist por artista e título
+        // Função para ordenar a playlist
         function sortPlaylist() {
             playlist.sort((a, b) => {
                 // Primeiro ordena por artista
-                if (a.artist !== b.artist) {
-                    return a.artist.localeCompare(b.artist);
-                }
-                // Se for o mesmo artista, ordena por título
-                return a.title.localeCompare(b.title);
+                const artistCompare = a.artist.localeCompare(b.artist, 'pt-BR');
+                if (artistCompare !== 0) return artistCompare;
+                
+                // Se for o mesmo artista, ordena por álbum
+                const albumCompare = a.album.localeCompare(b.album, 'pt-BR');
+                if (albumCompare !== 0) return albumCompare;
+                
+                // Se for o mesmo álbum, ordena por título
+                return a.title.localeCompare(b.title, 'pt-BR');
             });
+
+            // Atualiza os números das faixas
+            playlist.forEach((track, index) => {
+                track.trackNumber = index + 1;
+            });
+
             updatePlaylistHTML();
         }
 
-        // Atualiza as durações das músicas
+        // Função para atualizar as durações das músicas
         async function updateDurations() {
             for (let track of playlist) {
-                const duration = await getAudioDuration(track.file);
-                track.duration = duration;
+                if (track.duration === "0:00") {
+                    try {
+                        const duration = await getAudioDuration(track.file);
+                        track.duration = duration;
+                        console.log(`Duração atualizada para ${track.title}: ${duration}`);
+                    } catch (error) {
+                        console.error(`Erro ao obter duração de ${track.title}:`, error);
+                    }
+                }
             }
-            sortPlaylist(); // Ordena a playlist após atualizar as durações
+            sortPlaylist();
+            updatePlaylistHTML();
         }
 
         // Inicializa o player com as durações atualizadas
@@ -832,6 +1001,197 @@
             }
             isPlaying = !isPlaying;
         }
+
+        // Função para lidar com o upload de arquivos
+        function handleFileUpload(event) {
+            const files = event.target.files;
+            if (!files.length) return;
+
+            const uploadProgress = document.querySelector('.upload-progress');
+            const progressBar = document.querySelector('.progress-bar-upload-fill');
+            const uploadStatus = document.querySelector('.upload-status');
+            const uploadError = document.querySelector('.upload-error');
+            
+            uploadProgress.classList.add('active');
+            uploadError.classList.remove('active');
+            
+            let uploadedCount = 0;
+            const totalFiles = files.length;
+
+            Array.from(files).forEach((file, index) => {
+                if (!file.type.startsWith('audio/')) {
+                    uploadError.textContent = `O arquivo ${file.name} não é um arquivo de áudio válido.`;
+                    uploadError.classList.add('active');
+                    return;
+                }
+
+                const formData = new FormData();
+                formData.append('music', file);
+
+                // Configuração do fetch com timeout
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 300000); // 5 minutos timeout
+
+                uploadStatus.textContent = `Iniciando upload de ${file.name}...`;
+                console.log(`Iniciando upload do arquivo: ${file.name}`);
+
+                fetch('http://localhost:5000/upload', {
+                    method: 'POST',
+                    body: formData,
+                    signal: controller.signal
+                })
+                .then(response => {
+                    clearTimeout(timeoutId);
+                    console.log('Resposta do servidor:', response.status);
+                    
+                    if (!response.ok) {
+                        return response.json().then(data => {
+                            console.error('Erro na resposta:', data);
+                            throw new Error(data.error || `HTTP error! status: ${response.status}`);
+                        });
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.error) {
+                        console.error('Erro nos dados:', data.error);
+                        throw new Error(data.error);
+                    }
+
+                    console.log('Upload bem sucedido:', data);
+
+                    const newTrack = {
+                        title: file.name.replace(/\.[^/.]+$/, ""),
+                        artist: "Artista Desconhecido",
+                        album: "Álbum Desconhecido",
+                        duration: "0:00",
+                        cover: "musics/default-cover.jpg",
+                        file: `http://localhost:5000${data.path}`,
+                        trackNumber: playlist.length + 1
+                    };
+
+                    playlist.push(newTrack);
+                    uploadedCount++;
+                    
+                    // Atualiza a barra de progresso
+                    const progress = (uploadedCount / totalFiles) * 100;
+                    progressBar.style.width = `${progress}%`;
+                    uploadStatus.textContent = `Upload concluído: ${uploadedCount}/${totalFiles}`;
+
+                    if (uploadedCount === totalFiles) {
+                        setTimeout(() => {
+                            uploadProgress.classList.remove('active');
+                            progressBar.style.width = '0%';
+                            sortPlaylist();
+                            updatePlaylistHTML();
+                            updateDurations();
+                        }, 2000);
+                    }
+                })
+                .catch(error => {
+                    clearTimeout(timeoutId);
+                    console.error('Erro no upload:', error);
+                    
+                    let errorMessage = `Erro ao fazer upload do arquivo ${file.name}: `;
+                    if (error.name === 'AbortError') {
+                        errorMessage += 'O upload demorou muito tempo e foi cancelado.';
+                    } else if (error.message.includes('Failed to fetch')) {
+                        errorMessage += 'Não foi possível conectar ao servidor. Verifique se o servidor está rodando.';
+                    } else {
+                        errorMessage += error.message;
+                    }
+                    
+                    uploadError.textContent = errorMessage;
+                    uploadError.classList.add('active');
+                    uploadedCount++;
+                    
+                    if (uploadedCount === totalFiles) {
+                        setTimeout(() => {
+                            uploadProgress.classList.remove('active');
+                            progressBar.style.width = '0%';
+                        }, 5000);
+                    }
+                });
+            });
+        }
+
+        // Função para atualizar a lista de músicas do diretório
+        async function updateMusicList() {
+            try {
+                console.log('Atualizando lista de músicas...');
+                const response = await fetch('http://localhost:5000/list_music');
+                console.log('Resposta do servidor:', response.status);
+                
+                const data = await response.json();
+                console.log('Dados recebidos:', data);
+                
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+
+                // Verifica se há novas músicas
+                const currentFiles = playlist.map(track => track.file);
+                const newMusic = data.music.filter(music => 
+                    !currentFiles.includes(`http://localhost:5000${music.path}`)
+                );
+
+                if (newMusic.length > 0) {
+                    console.log('Novas músicas encontradas:', newMusic);
+                    // Adiciona apenas as novas músicas
+                    newMusic.forEach(music => {
+                        const fileName = music.name.replace(/\.[^/.]+$/, "");
+                        // Tenta extrair informações do nome do arquivo
+                        let artist = "Artista Desconhecido";
+                        let album = "Álbum Desconhecido";
+                        let title = fileName;
+
+                        // Se o nome do arquivo contiver " - ", assume que é "Artista - Título"
+                        if (fileName.includes(" - ")) {
+                            const parts = fileName.split(" - ");
+                            if (parts.length >= 2) {
+                                artist = parts[0].trim();
+                                title = parts[1].trim();
+                            }
+                        }
+
+                        playlist.push({
+                            title: title,
+                            artist: artist,
+                            album: album,
+                            duration: "0:00",
+                            cover: "musics/default-cover.jpg",
+                            file: `http://localhost:5000${music.path}`,
+                            trackNumber: playlist.length + 1
+                        });
+                    });
+
+                    sortPlaylist();
+                    updatePlaylistHTML();
+                    updateDurations();
+                }
+            } catch (error) {
+                console.error('Erro ao atualizar lista de músicas:', error);
+                if (error.message.includes('Failed to fetch')) {
+                    console.error('Não foi possível conectar ao servidor. Verifique se o servidor está rodando.');
+                }
+            }
+        }
+
+        // Atualiza a lista de músicas a cada 5 segundos
+        setInterval(updateMusicList, 5000);
+
+        // Função para tocar uma música específica
+        function playTrack(index) {
+            currentTrack = index;
+            loadTrack();
+            if (!isPlaying) {
+                togglePlay();
+            }
+        }
+
+        // Inicializa o player
+        updateMusicList();
+        updatePlaylistHTML();
     </script>
 </body>
 </html> 
