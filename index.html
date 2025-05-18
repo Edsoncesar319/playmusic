@@ -1,629 +1,773 @@
 <!DOCTYPE html>
-<html class="no-js" lang="zxx">
-  <head>
-    <meta charset="utf-8" />
-    <meta http-equiv="x-ua-compatible" content="ie=edge" />
-    <title>Play Music</title>
-    <meta name="description" content="" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>"Musickera"</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Arial, sans-serif;
+        }
 
-    <!-- <link rel="manifest" href="site.webmanifest"> -->
-    <link rel="shortcut icon" type="image/x-icon" href="img/favicon.png" />
-    <!-- Place favicon.ico in the root directory -->
+        body {
+            background: linear-gradient(45deg, #1a1a1a, #2d2d2d);
+            color: #fff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
 
-    <!-- CSS here -->
-    <link rel="stylesheet" href="css/bootstrap.min.css" />
-    <link rel="stylesheet" href="css/owl.carousel.min.css" />
-    <link rel="stylesheet" href="css/magnific-popup.css" />
-    <link rel="stylesheet" href="css/font-awesome.min.css" />
-    <link rel="stylesheet" href="css/themify-icons.css" />
-    <link rel="stylesheet" href="css/nice-select.css" />
-    <link rel="stylesheet" href="css/audioplayer.css" />
-    <link rel="stylesheet" href="css/flaticon.css" />
-    <link rel="stylesheet" href="css/gijgo.css" />
-    <link rel="stylesheet" href="css/animate.css" />
-    <link rel="stylesheet" href="css/slick.css" />
-    <link rel="stylesheet" href="css/slicknav.css" />
-    <link rel="stylesheet" href="css/style.css" />
-    <!-- <link rel="stylesheet" href="css/responsive.css"> -->
-  </head>
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            z-index: 2;
+        }
 
-  <body>
-    <!--[if lte IE 9]>
-      <p class="browserupgrade">
-        You are using an <strong>outdated</strong> browser. Please
-        <a href="https://browsehappy.com/">upgrade your browser</a> to improve
-        your experience and security.
-      </p>
-    <![endif]-->
+        .header {
+            text-align: center;
+            padding: 40px 0;
+        }
 
-    <!-- header-start -->
-    <header>
-      <div class="header-area">
-        <div id="sticky-header" class="main-header-area">
-          <div class="container-fluid">
-            <div class="header_bottom_border">
-              <div class="row align-items-center">
-                <div class="col-xl-3 col-lg-2">
-                  <div class="logo">
-                    <a href="index.html">
-                      <img src="img/logo.png" alt="" />
-                    </a>
-                  </div>
-                </div>
-                <div class="col-xl-6 col-lg-7">
-                  <div class="main-menu d-none d-lg-block">
-                    <nav>
-                      <ul id="navigation">
-                        <li><a class="active" href="index.html">home</a></li>
-                        <li><a href="about.html">About</a></li>
-                        <li><a href="track.html">tracks</a></li>
-                        <li>
-                          <a href="#">blog <i class="ti-angle-down"></i></a>
-                          <ul class="submenu">
-                            <li><a href="blog.html">blog</a></li>
-                            <li><a href="single-blog.html">single-blog</a></li>
-                          </ul>
-                        </li>
-                        <li>
-                          <a href="#">pages <i class="ti-angle-down"></i></a>
-                          <ul class="submenu">
-                            <li><a href="elements.html">elements</a></li>
-                          </ul>
-                        </li>
-                        <li><a href="contact.html">Contact</a></li>
-                      </ul>
-                    </nav>
-                  </div>
-                </div>
-                <div class="col-xl-3 col-lg-3 d-none d-lg-block">
-                  <div class="social_icon text-right">
-                    <ul>
-                      <li>
-                        <a href="#"> <i class="fa fa-facebook"></i> </a>
-                      </li>
-                      <li>
-                        <a href="#"> <i class="fa fa-twitter"></i> </a>
-                      </li>
-                      <li>
-                        <a href="#"> <i class="fa fa-instagram"></i> </a>
-                      </li>
-                    </ul>
-                  </div>
-                </div>
-                <div class="col-12">
-                  <div class="mobile_menu d-block d-lg-none"></div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </header>
-    <!-- header-end -->
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            background: linear-gradient(
+                45deg,
+                #00ff88,
+                #00cc6a,
+                #00ff88,
+                #00cc6a
+            );
+            background-size: 300% 300%;
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            animation: gradient 8s ease infinite;
+            text-shadow: 0 0 20px rgba(0, 255, 136, 0.3);
+            position: relative;
+            display: inline-block;
+        }
 
-    <!-- slider_area_start -->
-    <div class="slider_area">
-      <div class="single_slider d-flex align-items-center slider_bg_1 overlay2">
-        <div class="container">
-          <div class="row">
-            <div class="col-xl-12">
-              <div class="slider_text text-center">
-                <h3>Play Music</h3>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+        .header h1::before {
+            content: '';
+            position: absolute;
+            top: -10px;
+            left: -10px;
+            right: -10px;
+            bottom: -10px;
+            background: linear-gradient(
+                45deg,
+                #00ff88,
+                #00cc6a,
+                #00ff88,
+                #00cc6a
+            );
+            background-size: 300% 300%;
+            z-index: -1;
+            filter: blur(20px);
+            opacity: 0;
+            animation: glow 8s ease infinite;
+        }
+
+        @keyframes gradient {
+            0% {
+                background-position: 0% 50%;
+            }
+            50% {
+                background-position: 100% 50%;
+            }
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        @keyframes glow {
+            0% {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+            50% {
+                opacity: 0.3;
+                transform: scale(1.05);
+            }
+            100% {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+        }
+
+        .header h1:hover {
+            animation: gradient 4s ease infinite;
+        }
+
+        .header h1:hover::before {
+            animation: glow 4s ease infinite;
+        }
+
+        .header p {
+            color: #888;
+        }
+
+        .player-section {
+            display: flex;
+            gap: 30px;
+            margin-top: 20px;
+        }
+
+        .player-container {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 30px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            max-width: 600px;
+        }
+
+        .now-playing {
+            display: flex;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .album-cover {
+            width: 200px;
+            height: 200px;
+            border-radius: 15px;
+            margin-right: 30px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+        }
+
+        .track-info {
+            flex: 1;
+        }
+
+        .track-title {
+            font-size: 2em;
+            margin-bottom: 10px;
+            color: #fff;
+        }
+
+        .artist-name {
+            font-size: 1.2em;
+            color: #00ff88;
+            margin-bottom: 5px;
+        }
+
+        .album-name {
+            color: #888;
+            margin-bottom: 20px;
+        }
+
+        .progress-container {
+            width: 100%;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+            cursor: pointer;
+            margin-bottom: 10px;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: #00ff88;
+            border-radius: 3px;
+            width: 0%;
+            transition: width 0.1s linear;
+        }
+
+        .time-info {
+            display: flex;
+            justify-content: space-between;
+            color: #888;
+            font-size: 0.9em;
+            margin-bottom: 20px;
+        }
+
+        .controls {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+        }
+
+        .control-button {
+            background: none;
+            border: none;
+            color: #fff;
+            font-size: 1.5em;
+            cursor: pointer;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .control-button:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: scale(1.1);
+        }
+
+        .play-button {
+            background: #00ff88;
+            color: #1a1a1a;
+            font-size: 2em;
+            width: 70px;
+            height: 70px;
+        }
+
+        .play-button:hover {
+            background: #00cc6a;
+            transform: scale(1.1);
+        }
+
+        .volume-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .volume-slider {
+            width: 100px;
+            height: 4px;
+            -webkit-appearance: none;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 2px;
+            outline: none;
+        }
+
+        .volume-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 12px;
+            height: 12px;
+            background: #00ff88;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        .playlist {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 30px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            max-width: 500px;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        .playlist::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .playlist::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
+
+        .playlist::-webkit-scrollbar-thumb {
+            background: #00ff88;
+            border-radius: 4px;
+        }
+
+        .playlist::-webkit-scrollbar-thumb:hover {
+            background: #00cc6a;
+        }
+
+        .playlist-title {
+            font-size: 1.5em;
+            margin-bottom: 20px;
+            color: #00ff88;
+        }
+
+        .track-list {
+            list-style: none;
+        }
+
+        .track-item {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .track-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateX(10px);
+        }
+
+        .track-item.active {
+            background: rgba(0, 255, 136, 0.1);
+            border-left: 4px solid #00ff88;
+        }
+
+        .track-number {
+            width: 30px;
+            color: #888;
+        }
+
+        .track-info-small {
+            flex: 1;
+        }
+
+        .track-title-small {
+            color: #fff;
+            margin-bottom: 5px;
+        }
+
+        .artist-name-small {
+            color: #888;
+            font-size: 0.9em;
+        }
+
+        .track-duration {
+            color: #888;
+        }
+
+        .search-container {
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 12px 20px;
+            padding-left: 45px;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            border-radius: 10px;
+            color: #fff;
+            font-size: 1em;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+
+        .search-input:focus {
+            outline: none;
+            background: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 0 15px rgba(0, 255, 136, 0.2);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #888;
+            font-size: 1.2em;
+        }
+
+        .no-results {
+            text-align: center;
+            color: #888;
+            padding: 20px;
+            font-style: italic;
+        }
+
+        .highlight {
+            background-color: rgba(0, 255, 136, 0.2);
+            padding: 2px 4px;
+            border-radius: 4px;
+        }
+
+        @media (max-width: 1024px) {
+            .player-section {
+                flex-direction: column;
+            }
+
+            .player-container,
+            .playlist {
+                max-width: 100%;
+            }
+        }
+
+        .speaker-container {
+            position: fixed;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 100px;
+            height: 200px;
+            z-index: 1;
+        }
+
+        .speaker-left {
+            left: 20px;
+        }
+
+        .speaker-right {
+            right: 20px;
+        }
+
+        .speaker {
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            border: 2px solid #00ff88;
+            border-radius: 10px;
+            position: relative;
+            box-shadow: 0 0 20px #00ff88,
+                        inset 0 0 20px #00ff88;
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+
+        .speaker::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 60%;
+            height: 60%;
+            background: radial-gradient(circle, #00ff88 0%, transparent 70%);
+            opacity: 0.5;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .speaker::after {
+            content: '';
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 40px;
+            height: 40px;
+            background: #00ff88;
+            border-radius: 50%;
+            box-shadow: 0 0 10px #00ff88;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes glow {
+            from {
+                box-shadow: 0 0 20px #00ff88,
+                           inset 0 0 20px #00ff88;
+            }
+            to {
+                box-shadow: 0 0 30px #00ff88,
+                           inset 0 0 30px #00ff88;
+            }
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: translate(-50%, -50%) scale(1);
+                opacity: 0.5;
+            }
+            50% {
+                transform: translate(-50%, -50%) scale(1.1);
+                opacity: 0.7;
+            }
+            100% {
+                transform: translate(-50%, -50%) scale(1);
+                opacity: 0.5;
+            }
+        }
+
+        @media (max-width: 1200px) {
+            .speaker-container {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="speaker-container speaker-left">
+        <div class="speaker"></div>
     </div>
-    <!-- slider_area_end -->
 
-    <!-- music_area  -->
-    <div class="music_area">
-      <div class="container">
-        <div class="row align-items-center justify-content-center">
-          <div class="col-xl-10">
-            <div class="row align-items-center">
-              <div class="col-xl-9 col-md-9">
-                <div class="music_field">
-                  <div class="thumb">
-                    <img src="img/music_man/1.png" alt="" />
-                  </div>
-                  <div class="audio_name">
-                    <div class="name">
-                      <h4>Frando Kally</h4>
-                      <p>10 November, 2019</p>
+    <div class="speaker-container speaker-right">
+        <div class="speaker"></div>
+    </div>
+
+    <div class="container">
+        <div class="header">
+            <h1>Musickera</h1>
+            <p>Suas músicas favoritas em um só lugar</p>
+        </div>
+
+        <div class="player-section">
+            <div class="player-container">
+                <div class="now-playing">
+                    <img src="musics/chitao.jpeg" alt="Album Cover" class="album-cover">
+                    <div class="track-info">
+                        <h2 class="track-title">Nome da Música</h2>
+                        <p class="artist-name">Artista</p>
+                        <p class="album-name">Álbum</p>
                     </div>
-                    <audio preload="auto" controls>
-                      <source src="https://www.w3schools.com/html/horse.mp3" />
-                    </audio>
-                  </div>
-                </div>
-              </div>
-              <div class="col-xl-3 col-md-3">
-                <div class="music_btn">
-                  <a href="#" class="boxed-btn">buy albam</a>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-    <!-- music_area end  -->
-
-    <!-- about_area  -->
-    <div class="about_area">
-      <div class="container">
-        <div class="row align-items-center">
-          <div class="col-xl-5 col-md-6">
-            <div class="about_thumb">
-              <img class="img-fluid" src="img/about/about_1.png" alt="" />
-            </div>
-          </div>
-          <div class="col-xl-7 col-md-6">
-            <div class="about_info">
-              <h3>Jack Kalib</h3>
-              <p>
-                Esteem spirit temper too say adieus who direct esteem. It
-                esteems luckily or picture placing drawing. Apartments
-                frequently or motionless on reasonable projecting expression
-                enim ad minim veniam quis nostrud exercitation we have supported
-                programmes to help alleviate human suffering through animal
-                welfare when people might depend.
-              </p>
-              <div class="signature">
-                <img src="img/about/signature.png" alt="" />
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-    <!--/ about_area  -->
-
-    <!-- youtube_video_area  -->
-    <div class="youtube_video_area">
-      <div class="container-fluid p-0">
-        <div class="row no-gutters">
-          <div class="col-xl-3 col-lg-3 col-md-6">
-            <div class="single_video">
-              <div class="thumb">
-                <img src="img/video/1.png" alt="" />
-              </div>
-              <div class="hover_elements">
-                <div class="video">
-                  <a
-                    class="popup-video"
-                    href="https://www.youtube.com/watch?v=Hzmp3z6deF8"
-                  >
-                    <i class="fa fa-play"></i>
-                  </a>
                 </div>
 
-                <div class="hover_inner">
-                  <span>New York Show-2018</span>
-                  <h3><a href="#">Shadows of My Dream</a></h3>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="col-xl-3 col-lg-3 col-md-6">
-            <div class="single_video">
-              <div class="thumb">
-                <img src="img/video/2.png" alt="" />
-              </div>
-              <div class="hover_elements">
-                <div class="video">
-                  <a
-                    class="popup-video"
-                    href="https://www.youtube.com/watch?v=Hzmp3z6deF8"
-                  >
-                    <i class="fa fa-play"></i>
-                  </a>
+                <div class="progress-container">
+                    <div class="progress-bar"></div>
                 </div>
 
-                <div class="hover_inner">
-                  <span>New York Show-2018</span>
-                  <h3><a href="#">Shadows of My Dream</a></h3>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="col-xl-3 col-lg-3 col-md-6">
-            <div class="single_video">
-              <div class="thumb">
-                <img src="img/video/3.png" alt="" />
-              </div>
-              <div class="hover_elements">
-                <div class="video">
-                  <a
-                    class="popup-video"
-                    href="https://www.youtube.com/watch?v=Hzmp3z6deF8"
-                  >
-                    <i class="fa fa-play"></i>
-                  </a>
+                <div class="time-info">
+                    <span class="current-time">0:00</span>
+                    <span class="duration">0:00</span>
                 </div>
 
-                <div class="hover_inner">
-                  <span>New York Show-2018</span>
-                  <h3><a href="#">Shadows of My Dream</a></h3>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="col-xl-3 col-lg-3 col-md-6">
-            <div class="single_video">
-              <div class="thumb">
-                <img src="img/video/4.png" alt="" />
-              </div>
-              <div class="hover_elements">
-                <div class="video">
-                  <a
-                    class="popup-video"
-                    href="https://www.youtube.com/watch?v=Hzmp3z6deF8"
-                  >
-                    <i class="fa fa-play"></i>
-                  </a>
+                <div class="controls">
+                    <button class="control-button" onclick="previousTrack()">⏮</button>
+                    <button class="control-button" onclick="togglePlay()">⏯</button>
+                    <button class="control-button" onclick="nextTrack()">⏭</button>
                 </div>
 
-                <div class="hover_inner">
-                  <span>New York Show-2018</span>
-                  <h3><a href="#">Shadows of My Dream</a></h3>
+                <div class="volume-container">
+                    <span>🔈</span>
+                    <input type="range" class="volume-slider" min="0" max="100" value="100">
                 </div>
-              </div>
             </div>
-          </div>
-        </div>
-      </div>
-    </div>
-    <!-- / youtube_video_area  -->
 
-    <!-- music_area  -->
-    <div class="music_area music_gallery">
-      <div class="container">
-        <div class="row">
-          <div class="col-xl-12">
-            <div class="section_title text-center mb-65">
-              <h3>Latest Tracks</h3>
-            </div>
-          </div>
-        </div>
-        <div class="row align-items-center justify-content-center mb-20">
-          <div class="col-xl-10">
-            <div class="row align-items-center">
-              <div class="col-xl-9 col-md-9">
-                <div class="music_field">
-                  <div class="thumb">
-                    <img src="img/music_man/1.png" alt="" />
-                  </div>
-                  <div class="audio_name">
-                    <div class="name">
-                      <h4>Edson Mega Pegação</h4>
-                      <p>10 November, 2019</p>
-                    </div>
-                    <audio preload="auto" controls>
-                      <source src="./Musics/Sem mentiras.mp3" />
-                    </audio>
-                  </div>
+            <div class="playlist">
+                <h3 class="playlist-title">Playlist</h3>
+                <div class="search-container">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" class="search-input" placeholder="Buscar músicas..." id="searchInput">
                 </div>
-              </div>
-              <div class="col-xl-3 col-md-3">
-                <div class="music_btn">
-                  <a href="#" class="boxed-btn">Ouvir Gratis</a>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="row align-items-center justify-content-center mb-20">
-          <div class="col-xl-10">
-            <div class="row align-items-center">
-              <div class="col-xl-9 col-md-9">
-                <div class="music_field">
-                  <div class="thumb">
-                    <img src="img/music_man/2.png" alt="" />
-                  </div>
-                  <div class="audio_name">
-                    <div class="name">
-                      <h4>Frando Kally</h4>
-                      <p>10 November, 2019</p>
-                    </div>
-                    <audio preload="auto" controls>
-                      <source src="https://www.w3schools.com/html/horse.mp3" />
-                    </audio>
-                  </div>
-                </div>
-              </div>
-              <div class="col-xl-3 col-md-3">
-                <div class="music_btn">
-                  <a href="#" class="boxed-btn">Ouvir Gratis</a>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="row align-items-center justify-content-center mb-20">
-          <div class="col-xl-10">
-            <div class="row align-items-center">
-              <div class="col-xl-9 col-md-9">
-                <div class="music_field">
-                  <div class="thumb">
-                    <img src="img/music_man/3.png" alt="" />
-                  </div>
-                  <div class="audio_name">
-                    <div class="name">
-                      <h4>Frando Kally</h4>
-                      <p>10 November, 2019</p>
-                    </div>
-                    <audio preload="auto" controls>
-                      <source src="https://www.w3schools.com/html/horse.mp3" />
-                    </audio>
-                  </div>
-                </div>
-              </div>
-              <div class="col-xl-3 col-md-3">
-                <div class="music_btn">
-                  <a href="#" class="boxed-btn">buy albam</a>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-    <!-- music_area end  -->
-
-    <!-- gallery -->
-    <div class="gallery_area">
-      <div class="container">
-        <div class="row">
-          <div class="col-xl-12">
-            <div class="section_title text-center mb-65">
-              <h3>Image Galleries</h3>
-            </div>
-          </div>
-        </div>
-        <div class="row grid">
-          <div class="col-xl-5 col-lg-5 grid-item cat1 col-md-6">
-            <div class="single-gallery mb-30">
-              <div class="portfolio-img">
-                <img src="img/gallery/1.png" alt="" />
-              </div>
-              <div class="gallery_hover">
-                <a
-                  class="popup-image"
-                  href="img/gallery/1.png"
-                  class="hover_inner"
-                >
-                  <i class="ti-plus"></i>
-                </a>
-              </div>
-            </div>
-          </div>
-          <div class="col-xl-7 col-lg-7 grid-item cat3 cat4 col-md-6">
-            <div class="single-gallery mb-30">
-              <div class="portfolio-img">
-                <img src="img/gallery/2.png" alt="" />
-              </div>
-              <div class="gallery_hover">
-                <a
-                  class="popup-image"
-                  href="img/gallery/2.png"
-                  class="hover_inner"
-                >
-                  <i class="ti-plus"></i>
-                </a>
-              </div>
-            </div>
-          </div>
-          <div class="col-xl-4 col-lg-6 grid-item cat4 col-md-6">
-            <div class="single-gallery mb-30">
-              <div class="portfolio-img">
-                <img src="img/gallery/3.png" alt="" />
-              </div>
-              <div class="gallery_hover">
-                <a
-                  class="popup-image"
-                  href="img/gallery/3.png"
-                  class="hover_inner"
-                >
-                  <i class="ti-plus"></i>
-                </a>
-              </div>
-            </div>
-          </div>
-          <div class="col-xl-4 col-lg-6 grid-item cat2 col-md-6">
-            <div class="single-gallery mb-30">
-              <div class="portfolio-img">
-                <img src="img/gallery/4.png" alt="" />
-              </div>
-              <div class="gallery_hover">
-                <a
-                  class="popup-image"
-                  href="img/gallery/4.png"
-                  class="hover_inner"
-                >
-                  <i class="ti-plus"></i>
-                </a>
-              </div>
-            </div>
-          </div>
-          <div class="col-xl-4 col-lg-6 grid-item cat2 col-md-6">
-            <div class="single-gallery mb-30">
-              <div class="portfolio-img">
-                <img src="img/gallery/5.png" alt="" />
-              </div>
-              <div class="gallery_hover">
-                <a
-                  class="popup-image"
-                  href="img/gallery/5.png"
-                  class="hover_inner"
-                >
-                  <i class="ti-plus"></i>
-                </a>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-    <!--/ gallery -->
-
-    <!-- contact_rsvp -->
-    <div class="contact_rsvp">
-      <div class="container">
-        <div class="row">
-          <div class="col-xl-12">
-            <div class="text text-center">
-              <h3>Contact For RSVP</h3>
-              <a class="boxed-btn3" href="contact.html">Contact Me</a>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-    <!--/ contact_rsvp -->
-
-    <!-- footer start -->
-    <footer class="footer">
-      <div class="footer_top">
-        <div class="container">
-          <div class="row">
-            <div class="col-xl-6 col-md-6">
-              <div class="footer_widget">
-                <h3 class="footer_title">Services</h3>
-                <div class="subscribe-from">
-                  <form action="#">
-                    <input type="text" placeholder="Enter your mail" />
-                    <button type="submit">Subscribe</button>
-                  </form>
-                </div>
-                <p class="sub_text">
-                  Esteem spirit temper too say adieus who direct esteem esteems
-                  luckily.
-                </p>
-              </div>
-            </div>
-            <div class="col-xl-5 col-md-5 offset-xl-1">
-              <div class="footer_widget">
-                <h3 class="footer_title">Contact Me</h3>
-                <ul>
-                  <li><a href="#">conbusi@support.com </a></li>
-                  <li><a href="#">+10 873 672 6782 </a></li>
-                  <li>
-                    <a href="#">600/D, Green road, Kings Garden NewYork-6732</a>
-                  </li>
+                <ul class="track-list">
+                    <!-- A lista será preenchida dinamicamente pelo JavaScript -->
                 </ul>
-                <div class="socail_links">
-                  <ul>
-                    <li>
-                      <a href="#">
-                        <i class="fa fa-facebook"></i>
-                      </a>
-                    </li>
-                    <li>
-                      <a href="#">
-                        <i class="fa fa-google-plus"></i>
-                      </a>
-                    </li>
-                    <li>
-                      <a href="#">
-                        <i class="fa fa-twitter"></i>
-                      </a>
-                    </li>
-                    <li>
-                      <a href="#">
-                        <i class="fa fa-youtube-play"></i>
-                      </a>
-                    </li>
-                    <li>
-                      <a href="#">
-                        <i class="fa fa-instagram"></i>
-                      </a>
-                    </li>
-                  </ul>
-                </div>
-              </div>
             </div>
-          </div>
         </div>
-      </div>
-      <div class="copy-right_text">
-        <div class="container">
-          <div class="footer_border"></div>
-          <div class="row">
-            <div class="col-xl-7 col-md-6">
-              <p class="copy_right">
-                <!-- Link back to Colorlib can't be removed. Template is licensed under CC BY 3.0. -->
-                Copyright &copy;
-                <script>
-                  document.write(new Date().getFullYear());
-                </script>
-                All rights reserved | This template is made with
-                <i class="fa fa-heart-o" aria-hidden="true"></i> by
-                <a href="https://colorlib.com" target="_blank">Colorlib</a>
-                <!-- Link back to Colorlib can't be removed. Template is licensed under CC BY 3.0. -->
-              </p>
-            </div>
-            <div class="col-xl-5 col-md-6">
-              <div class="footer_links">
-                <ul>
-                  <li><a href="#">home</a></li>
-                  <li><a href="#">about</a></li>
-                  <li><a href="#">tracks</a></li>
-                  <li><a href="#">blog</a></li>
-                  <li><a href="#">contact</a></li>
-                </ul>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </footer>
-    <!--/ footer end  -->
-
-    <!-- link that opens popup -->
-
-    <!-- JS here -->
-    <script
-      src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
-      integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
-      crossorigin="anonymous"
-    ></script>
-    <script src="js/vendor/modernizr-3.5.0.min.js"></script>
-    <script src="js/vendor/jquery-1.12.4.min.js"></script>
-    <script src="js/popper.min.js"></script>
-    <script src="js/bootstrap.min.js"></script>
-    <script src="js/owl.carousel.min.js"></script>
-    <script src="js/isotope.pkgd.min.js"></script>
-    <script src="js/ajax-form.js"></script>
-    <script src="js/waypoints.min.js"></script>
-    <script src="js/jquery.counterup.min.js"></script>
-    <script src="js/imagesloaded.pkgd.min.js"></script>
-    <script src="js/audioplayer.js"></script>
-    <script src="js/scrollIt.js"></script>
-    <script src="js/jquery.scrollUp.min.js"></script>
-    <script src="js/wow.min.js"></script>
-    <script src="js/nice-select.min.js"></script>
-    <script src="js/jquery.slicknav.min.js"></script>
-    <script src="js/jquery.magnific-popup.min.js"></script>
-    <script src="js/plugins.js"></script>
-    <script src="js/gijgo.min.js"></script>
-    <script src="js/slick.min.js"></script>
-    <!--contact js-->
-    <script src="js/contact.js"></script>
-    <script src="js/jquery.ajaxchimp.min.js"></script>
-    <script src="js/jquery.form.js"></script>
-    <script src="js/jquery.validate.min.js"></script>
-    <script src="js/mail-script.js"></script>
-
-    <script src="js/main.js"></script>
+    </div>
 
     <script>
-      $(function () {
-        $("audio").audioPlayer({});
-      });
+        const playlist = [
+            {
+                title: "Evidências",
+                artist: "Chitãozinho & Xororó",
+                album: "A História Continua",
+                duration: "6:32",
+                cover: "musics/chitao.jpeg",
+                file: "musics/Evidências.mp3"
+            },
+            {
+                title: "Alô",
+                artist: "Chitãozinho & Xororó",
+                album: "A História Continua",
+                duration: "3:45",
+                cover: "musics/chitao.jpeg",
+                file: "musics/Alô.mp3"
+            },
+            {
+                title: "Nem sei",
+                artist: "Edson Mega Pegação",
+                album: "Mega Pegação",
+                duration: "4:20",
+                cover: "musics/chitao.jpeg",
+                file: "musics/Nem sei- Edson Mega Pegação.mp3"
+            },
+            {
+                title: "Sou eu",
+                artist: "Chitãozinho & Xororó",
+                album: "A História Continua",
+                duration: "4:15",
+                cover: "musics/chitao.jpeg",
+                file: "musics/Sou eu.mp3"
+            }
+        ];
+
+        let currentTrack = 0;
+        let isPlaying = false;
+        let audio = new Audio();
+
+        function updatePlayerInfo(track) {
+            document.querySelector('.track-title').textContent = track.title;
+            document.querySelector('.artist-name').textContent = track.artist;
+            document.querySelector('.album-name').textContent = track.album;
+            document.querySelector('.album-cover').src = track.cover;
+            document.querySelector('.album-cover').alt = `${track.title} - ${track.artist}`;
+            document.querySelector('.duration').textContent = track.duration;
+            
+            // Atualiza a lista de reprodução
+            const trackItems = document.querySelectorAll('.track-item');
+            trackItems.forEach((item, index) => {
+                item.classList.toggle('active', index === currentTrack);
+            });
+        }
+
+        function nextTrack() {
+            currentTrack = (currentTrack + 1) % playlist.length;
+            loadTrack();
+            // Atualiza o botão de play para mostrar o estado correto
+            document.querySelector('.control-button:nth-child(2)').textContent = isPlaying ? '⏸' : '⏯';
+        }
+
+        function previousTrack() {
+            currentTrack = (currentTrack - 1 + playlist.length) % playlist.length;
+            loadTrack();
+            // Atualiza o botão de play para mostrar o estado correto
+            document.querySelector('.control-button:nth-child(2)').textContent = isPlaying ? '⏸' : '⏯';
+        }
+
+        function loadTrack() {
+            const track = playlist[currentTrack];
+            audio.src = track.file;
+            audio.load();
+            updatePlayerInfo(track);
+            if (isPlaying) {
+                audio.play().catch(error => {
+                    console.error('Erro ao reproduzir áudio:', error);
+                    alert('Erro ao reproduzir a música. Verifique se o arquivo existe.');
+                });
+            }
+        }
+
+        let searchTimeout;
+        const searchInput = document.getElementById('searchInput');
+
+        function highlightText(text, searchTerm) {
+            if (!searchTerm) return text;
+            const regex = new RegExp(`(${searchTerm})`, 'gi');
+            return text.replace(regex, '<span class="highlight">$1</span>');
+        }
+
+        function filterPlaylist(searchTerm) {
+            const filteredTracks = playlist.filter(track => 
+                track.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                track.artist.toLowerCase().includes(searchTerm.toLowerCase())
+            );
+
+            const trackList = document.querySelector('.track-list');
+            
+            if (filteredTracks.length === 0) {
+                trackList.innerHTML = '<li class="no-results">Nenhuma música encontrada</li>';
+                return;
+            }
+
+            trackList.innerHTML = filteredTracks.map((track, index) => `
+                <li class="track-item ${playlist.indexOf(track) === currentTrack ? 'active' : ''}" 
+                    onclick="playTrack(${playlist.indexOf(track)})">
+                    <span class="track-number">${(playlist.indexOf(track) + 1).toString().padStart(2, '0')}</span>
+                    <div class="track-info-small">
+                        <div class="track-title-small">${highlightText(track.title, searchTerm)}</div>
+                        <div class="artist-name-small">${highlightText(track.artist, searchTerm)}</div>
+                    </div>
+                    <span class="track-duration">${track.duration}</span>
+                </li>
+            `).join('');
+        }
+
+        searchInput.addEventListener('input', function(e) {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                filterPlaylist(e.target.value);
+            }, 300);
+        });
+
+        // Atualiza a função updatePlaylistHTML para usar o valor atual da busca
+        function updatePlaylistHTML() {
+            filterPlaylist(searchInput.value);
+        }
+
+        // Função para formatar a duração da música
+        function formatDuration(duration) {
+            const [minutes, seconds] = duration.split(':').map(Number);
+            return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+        }
+
+        // Função para obter a duração real do arquivo de áudio
+        function getAudioDuration(file) {
+            return new Promise((resolve) => {
+                const audio = new Audio(file);
+                audio.addEventListener('loadedmetadata', () => {
+                    const minutes = Math.floor(audio.duration / 60);
+                    const seconds = Math.floor(audio.duration % 60);
+                    resolve(`${minutes}:${seconds.toString().padStart(2, '0')}`);
+                });
+                audio.addEventListener('error', () => {
+                    resolve('0:00');
+                });
+            });
+        }
+
+        // Função para ordenar a playlist por artista e título
+        function sortPlaylist() {
+            playlist.sort((a, b) => {
+                if (a.artist === b.artist) {
+                    return a.title.localeCompare(b.title);
+                }
+                return a.artist.localeCompare(b.artist);
+            });
+            updatePlaylistHTML();
+        }
+
+        // Atualiza as durações das músicas
+        async function updateDurations() {
+            for (let track of playlist) {
+                const duration = await getAudioDuration(track.file);
+                track.duration = duration;
+            }
+            sortPlaylist(); // Ordena a playlist após atualizar as durações
+        }
+
+        // Inicializa o player com as durações atualizadas
+        updateDurations();
+        updatePlaylistHTML();
+        loadTrack();
+
+        // Event Listeners
+        document.querySelector('.progress-container').addEventListener('click', function(e) {
+            const rect = this.getBoundingClientRect();
+            const pos = (e.clientX - rect.left) / rect.width;
+            audio.currentTime = pos * audio.duration;
+        });
+
+        document.querySelector('.volume-slider').addEventListener('input', function(e) {
+            audio.volume = e.target.value / 100;
+        });
+
+        audio.addEventListener('timeupdate', function() {
+            const progress = (audio.currentTime / audio.duration) * 100;
+            document.querySelector('.progress-bar').style.width = progress + '%';
+            document.querySelector('.current-time').textContent = formatTime(audio.currentTime);
+        });
+
+        audio.addEventListener('ended', nextTrack);
+
+        audio.addEventListener('error', function(e) {
+            console.error('Erro no áudio:', e);
+            alert('Erro ao carregar a música. Verifique se o arquivo existe.');
+        });
+
+        audio.addEventListener('loadeddata', function() {
+            console.log('Áudio carregado com sucesso');
+        });
+
+        function formatTime(seconds) {
+            const minutes = Math.floor(seconds / 60);
+            seconds = Math.floor(seconds % 60);
+            return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+        }
+
+        function togglePlay() {
+            if (isPlaying) {
+                audio.pause();
+                document.querySelector('.control-button:nth-child(2)').textContent = '⏯';
+            } else {
+                audio.play().catch(error => {
+                    console.error('Erro ao reproduzir áudio:', error);
+                    alert('Erro ao reproduzir a música. Verifique se o arquivo existe.');
+                });
+                document.querySelector('.control-button:nth-child(2)').textContent = '⏸';
+            }
+            isPlaying = !isPlaying;
+        }
     </script>
-  </body>
-</html>
+</body>
+</html> 
