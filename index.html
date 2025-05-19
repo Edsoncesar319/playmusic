@@ -2,8 +2,6 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-   <link rel="shortcut icon" href="assets/favicon.png" type="image/png" />
-    <link rel="stylesheet" href="css/movies.css">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>"Musickera"</title>
     <style>
@@ -131,6 +129,86 @@
             backdrop-filter: blur(10px);
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
             max-width: 600px;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .player-container.fullscreen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            max-width: none;
+            z-index: 1000;
+            border-radius: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .player-container.fullscreen .now-playing {
+            flex-direction: column;
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+        .player-container.fullscreen .album-cover {
+            width: 400px;
+            height: 400px;
+            margin-right: 0;
+            margin-bottom: 30px;
+        }
+
+        .player-container.fullscreen .track-info {
+            text-align: center;
+        }
+
+        .player-container.fullscreen .track-title {
+            font-size: 3em;
+        }
+
+        .player-container.fullscreen .artist-name {
+            font-size: 1.8em;
+        }
+
+        .player-container.fullscreen .album-name {
+            font-size: 1.4em;
+        }
+
+        .player-container.fullscreen .controls {
+            gap: 40px;
+        }
+
+        .player-container.fullscreen .control-button {
+            width: 70px;
+            height: 70px;
+            font-size: 2em;
+        }
+
+        .player-container.fullscreen .play-button {
+            width: 100px;
+            height: 100px;
+            font-size: 3em;
+        }
+
+        .player-container.fullscreen .progress-container {
+            width: 80%;
+            height: 8px;
+        }
+
+        .player-container.fullscreen .time-info {
+            width: 80%;
+            font-size: 1.2em;
+        }
+
+        .player-container.fullscreen .volume-container {
+            margin-top: 40px;
+        }
+
+        .player-container.fullscreen .volume-slider {
+            width: 200px;
         }
 
         .now-playing {
@@ -220,6 +298,11 @@
             transform: scale(1.1);
         }
 
+        .control-button.active {
+            color: #00ff88;
+            background: rgba(0, 255, 136, 0.1);
+        }
+
         .play-button {
             background: #00ff88;
             color: #1a1a1a;
@@ -230,6 +313,30 @@
 
         .play-button:hover {
             background: #00cc6a;
+            transform: scale(1.1);
+        }
+
+        .fullscreen-button {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: none;
+            border: none;
+            color: #fff;
+            font-size: 1.5em;
+            cursor: pointer;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            z-index: 10;
+        }
+
+        .fullscreen-button:hover {
+            background: rgba(255, 255, 255, 0.1);
             transform: scale(1.1);
         }
 
@@ -686,7 +793,10 @@
                     <button class="control-button" onclick="previousTrack()">⏮</button>
                     <button class="control-button" onclick="togglePlay()">⏯</button>
                     <button class="control-button" onclick="nextTrack()">⏭</button>
+                    <button class="control-button" onclick="toggleRepeat()" id="repeatButton">🔁</button>
                 </div>
+
+                <button class="fullscreen-button" onclick="toggleFullscreen()">⛶</button>
 
                 <div class="volume-container">
                     <span>🔈</span>
@@ -744,7 +854,7 @@
                 title: "Dois rolês",
                 artist: "Edson Mega Pegação",
                 album: "Mega Pegação",
-                duration: "0:00",
+                duration: "3:47",
                 cover: "musics/Edson.jpg",
                 file: "musics/Dois rolês.mp3",
                 trackNumber: 3
@@ -769,8 +879,8 @@
             },
             {
                 title: "Baqueado",
-                artist: "Panda, Icaro & Gilmar",
-                album: "Panda sem moderação",
+                artist: "Panda",
+                album: "Single",
                 duration: "0:00",
                 cover: "musics/panda.jpg",
                 file: "musics/Baqueado-Panda.mp3",
@@ -787,7 +897,7 @@
             },
             {
                 title: "Bijoteria",
-                artist: "Bruno & Marrone",
+                artist: "Simone",
                 album: "Ao Vivo",
                 duration: "0:00",
                 cover: "musics/bijoteria.jpeg",
@@ -799,6 +909,7 @@
         let currentTrack = 0;
         let isPlaying = false;
         let audio = new Audio();
+        let repeatMode = 'none'; // 'none', 'one', 'all'
 
         function updatePlayerInfo(track) {
             document.querySelector('.track-title').textContent = track.title;
@@ -973,7 +1084,18 @@
             document.querySelector('.current-time').textContent = formatTime(audio.currentTime);
         });
 
-        audio.addEventListener('ended', nextTrack);
+        audio.addEventListener('ended', function() {
+            if (repeatMode === 'one') {
+                audio.currentTime = 0;
+                audio.play();
+            } else if (repeatMode === 'all') {
+                nextTrack();
+            } else {
+                if (currentTrack < playlist.length - 1) {
+                    nextTrack();
+                }
+            }
+        });
 
         audio.addEventListener('error', function(e) {
             console.error('Erro no áudio:', e);
@@ -1194,6 +1316,32 @@
         // Inicializa o player
         updateMusicList();
         updatePlaylistHTML();
+
+        function toggleRepeat() {
+            const repeatButton = document.getElementById('repeatButton');
+            switch (repeatMode) {
+                case 'none':
+                    repeatMode = 'one';
+                    repeatButton.classList.add('active');
+                    repeatButton.textContent = '🔂';
+                    break;
+                case 'one':
+                    repeatMode = 'all';
+                    repeatButton.classList.add('active');
+                    repeatButton.textContent = '🔁';
+                    break;
+                case 'all':
+                    repeatMode = 'none';
+                    repeatButton.classList.remove('active');
+                    repeatButton.textContent = '🔁';
+                    break;
+            }
+        }
+
+        function toggleFullscreen() {
+            const playerContainer = document.querySelector('.player-container');
+            playerContainer.classList.toggle('fullscreen');
+        }
     </script>
 </body>
 </html> 
