@@ -880,29 +880,38 @@
             {
                 title: "Baqueado",
                 artist: "Panda",
-                album: "Single",
-                duration: "0:00",
+                album: "panda, Icaro & Gilmar",
+                duration: "2:34",
                 cover: "musics/panda.jpg",
                 file: "musics/Baqueado-Panda.mp3",
                 trackNumber: 6
             },
             {
+                title: "Esse B.O. é Meu",
+                artist: "Panda",
+                album: "promocional 2025",
+                duration: "2:34",
+                cover: "musics/pandaleao.jpeg",
+                file: "musics/Esse B.O. é Meu.mp3",
+                trackNumber: 7
+            },
+            {
                 title: "Erro Gostoso",
-                artist: "Simone",
+                artist: "Simone Mendes",
                 album: "Ao Vivo",
                 duration: "3:30",
                 cover: "musics/simone.jpeg",
                 file: "musics/01 - Erro Gostoso (Ao Vivo).mp3",
-                trackNumber: 7
+                trackNumber: 8
             },
             {
                 title: "Bijoteria",
-                artist: "Simone",
+                artist: "Bruno & Marrone",
                 album: "Ao Vivo",
-                duration: "0:00",
+                duration: "3:30",
                 cover: "musics/bijoteria.jpeg",
                 file: "musics/02-BIJOTERIA.MP3",
-                trackNumber: 8
+                trackNumber: 9
             }
         ];
 
@@ -1022,6 +1031,23 @@
             });
         }
 
+        // Função para atualizar as durações das músicas
+        async function updateDurations() {
+            for (let track of playlist) {
+                if (track.duration === "0:00") {
+                    try {
+                        const duration = await getAudioDuration(track.file);
+                        track.duration = duration;
+                        console.log(`Duração atualizada para ${track.title}: ${duration}`);
+                    } catch (error) {
+                        console.error(`Erro ao obter duração de ${track.title}:`, error);
+                    }
+                }
+            }
+            sortPlaylist();
+            updatePlaylistHTML();
+        }
+
         // Função para ordenar a playlist
         function sortPlaylist() {
             playlist.sort((a, b) => {
@@ -1042,23 +1068,6 @@
                 track.trackNumber = index + 1;
             });
 
-            updatePlaylistHTML();
-        }
-
-        // Função para atualizar as durações das músicas
-        async function updateDurations() {
-            for (let track of playlist) {
-                if (track.duration === "0:00") {
-                    try {
-                        const duration = await getAudioDuration(track.file);
-                        track.duration = duration;
-                        console.log(`Duração atualizada para ${track.title}: ${duration}`);
-                    } catch (error) {
-                        console.error(`Erro ao obter duração de ${track.title}:`, error);
-                    }
-                }
-            }
-            sortPlaylist();
             updatePlaylistHTML();
         }
 
