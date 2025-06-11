@@ -2,7 +2,10 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#121212">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>Musickera</title>
     <style>
         * {
@@ -10,6 +13,8 @@
             padding: 0;
             box-sizing: border-box;
             font-family: 'Circular', 'Segoe UI', Arial, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
         }
 
         body {
@@ -18,6 +23,8 @@
             min-height: 100vh;
             display: flex;
             position: relative;
+            overflow-x: hidden;
+            -webkit-overflow-scrolling: touch;
         }
 
         .container {
@@ -172,6 +179,7 @@
             cursor: pointer;
             position: relative;
             overflow: hidden;
+            touch-action: none;
         }
 
         .progress-container:hover .progress-bar {
@@ -228,6 +236,8 @@
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             position: relative;
             overflow: hidden;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
         }
 
         .control-button::before {
@@ -289,6 +299,7 @@
             border-radius: 2px;
             outline: none;
             transition: all 0.3s ease;
+            touch-action: none;
         }
 
         .volume-slider:hover {
@@ -350,6 +361,8 @@
             cursor: pointer;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             box-shadow: 0 4px 12px rgba(29, 185, 84, 0.3);
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
         }
 
         .upload-button:hover {
@@ -448,6 +461,8 @@
             padding: 0 8px;
             opacity: 0;
             transition: all 0.3s ease;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
         }
 
         .track-item:hover .remove-track {
@@ -472,6 +487,8 @@
             transition: all 0.3s ease;
             display: none;
             width: 100%;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
         }
 
         .clear-playlist:hover {
@@ -483,10 +500,12 @@
             .player-section {
                 grid-template-columns: 1fr;
                 max-width: 800px;
+                padding: 16px;
             }
 
             .playlist {
                 height: 400px;
+                overflow-y: auto;
             }
 
             .track-title {
@@ -497,11 +516,17 @@
                 width: 240px;
                 height: 240px;
             }
+
+            .now-playing {
+                gap: 24px;
+            }
         }
 
         @media (max-width: 768px) {
             .header {
-                padding: 16px;
+                padding: 12px 16px;
+                flex-direction: column;
+                gap: 12px;
             }
 
             .header h1 {
@@ -509,13 +534,23 @@
             }
 
             .search-bar {
-                width: 200px;
+                width: 100%;
+                max-width: 300px;
+                margin: 0 auto;
+            }
+
+            .player-section {
+                padding: 12px;
+            }
+
+            .player-container {
+                padding: 16px;
             }
 
             .now-playing {
                 flex-direction: column;
                 text-align: center;
-                gap: 24px;
+                gap: 20px;
             }
 
             .track-info {
@@ -526,8 +561,16 @@
                 font-size: 28px;
             }
 
+            .artist-name {
+                font-size: 18px;
+            }
+
+            .album-name {
+                font-size: 14px;
+            }
+
             .controls {
-                gap: 16px;
+                gap: 12px;
             }
 
             .control-button {
@@ -541,20 +584,37 @@
                 height: 48px;
                 font-size: 24px;
             }
+
+            .volume-container {
+                margin-top: 20px;
+                padding: 8px;
+            }
+
+            .volume-slider {
+                width: 100px;
+            }
         }
 
         @media (max-width: 480px) {
+            .header {
+                padding: 10px;
+            }
+
+            .header h1 {
+                font-size: 20px;
+            }
+
             .player-section {
-                padding: 16px;
+                padding: 8px;
             }
 
             .player-container {
-                padding: 20px;
+                padding: 12px;
             }
 
             .album-cover {
-                width: 200px;
-                height: 200px;
+                width: 180px;
+                height: 180px;
             }
 
             .track-title {
@@ -566,11 +626,11 @@
             }
 
             .album-name {
-                font-size: 14px;
+                font-size: 12px;
             }
 
             .controls {
-                gap: 12px;
+                gap: 8px;
             }
 
             .control-button {
@@ -584,9 +644,143 @@
                 height: 44px;
                 font-size: 22px;
             }
+
+            .volume-container {
+                margin-top: 16px;
+                padding: 6px;
+            }
+
+            .volume-slider {
+                width: 80px;
+            }
+
+            .track-item {
+                padding: 8px 12px;
+            }
+
+            .track-title-small {
+                font-size: 14px;
+            }
+
+            .artist-name-small {
+                font-size: 12px;
+            }
+
+            .track-duration {
+                font-size: 10px;
+            }
+
+            .playlist-title h3 {
+                font-size: 20px;
+            }
+
+            .upload-button {
+                padding: 8px 16px;
+                font-size: 12px;
+            }
         }
 
-        /* Animações */
+        @media (max-height: 480px) and (orientation: landscape) {
+            .player-section {
+                grid-template-columns: 1fr 300px;
+            }
+
+            .now-playing {
+                flex-direction: row;
+                text-align: left;
+            }
+
+            .album-cover {
+                width: 120px;
+                height: 120px;
+            }
+
+            .track-title {
+                font-size: 20px;
+            }
+
+            .artist-name {
+                font-size: 14px;
+            }
+
+            .album-name {
+                font-size: 12px;
+            }
+
+            .controls {
+                margin-top: 16px;
+            }
+
+            .playlist {
+                height: 300px;
+            }
+        }
+
+        @media (min-width: 768px) and (max-width: 1024px) {
+            .player-section {
+                grid-template-columns: 1fr 350px;
+                gap: 16px;
+            }
+
+            .album-cover {
+                width: 220px;
+                height: 220px;
+            }
+
+            .track-title {
+                font-size: 32px;
+            }
+
+            .playlist {
+                height: 450px;
+            }
+        }
+
+        @media (min-width: 1400px) {
+            .player-section {
+                max-width: 1600px;
+                grid-template-columns: 1fr 400px;
+            }
+
+            .album-cover {
+                width: 320px;
+                height: 320px;
+            }
+
+            .track-title {
+                font-size: 52px;
+            }
+
+            .artist-name {
+                font-size: 24px;
+            }
+
+            .album-name {
+                font-size: 18px;
+            }
+
+            .playlist {
+                height: 600px;
+            }
+        }
+
+        @media (hover: none) {
+            .control-button:hover,
+            .upload-button:hover,
+            .remove-track:hover,
+            .clear-playlist:hover {
+                transform: none;
+            }
+
+            .track-item:hover {
+                transform: none;
+            }
+
+            .album-cover:hover {
+                transform: none;
+            }
+        }
+
         @keyframes fadeIn {
             from {
                 opacity: 0;
