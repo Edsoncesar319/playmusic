@@ -880,6 +880,7 @@
             border-left: 4px solid #1DB954;
         }
     </style>
+    <script src="https://cdn.jsdelivr.net/npm/jsmediatags@3.9.7/dist/jsmediatags.min.js"></script>
 </head>
 <body>
     <div class="container">
@@ -959,7 +960,7 @@
                 artist: "Canção de Jorge & Mateus e Lauana Prado",
                 album: "Check-In",
                 duration: "3:45",
-                cover: "musics/havera.jpeg",
+                cover: "/",
                 file: "Haverá Sinais.mp3",
                 trackNumber: 1
             },
@@ -1618,43 +1619,64 @@
             if (!files.length) return;
 
             for (const file of files) {
-                if (!file.type.startsWith('audio/')) {
-                    // Verifica se é uma URL do Deezer
-                    if (isDeezerUrl(file.name)) {
-                        await processDeezerUrl(file.name);
-                        continue;
-                    }
-                    alert(`O arquivo ${file.name} não é um arquivo de áudio válido ou uma URL do Deezer.`);
-                    continue;
-                }
+                if (!file.type.startsWith('audio/')) continue;
 
                 try {
-                    // Converte o arquivo para ArrayBuffer
-                    const arrayBuffer = await file.arrayBuffer();
-                    
-                    // Extrai informações do nome do arquivo
-                    let artist = "Artista Desconhecido";
-                    let album = "Álbum Desconhecido";
-                    let title = file.name.replace(/\.[^/.]+$/, "");
+                    // Lê os metadados ID3
+                    let title = "";
+                    let artist = "";
+                    let album = "";
+                    let cover = "";
 
-                    if (title.includes(" - ")) {
-                        const parts = title.split(" - ");
-                        if (parts.length >= 2) {
-                            artist = parts[0].trim();
-                            title = parts[1].trim();
+                    await new Promise((resolve) => {
+                        window.jsmediatags.read(file, {
+                            onSuccess: function(tag) {
+                                title = tag.tags.title || "";
+                                artist = tag.tags.artist || "";
+                                album = tag.tags.album || "";
+                                if (tag.tags.picture) {
+                                    const { data, format } = tag.tags.picture;
+                                    let base64String = "";
+                                    for (let i = 0; i < data.length; i++) {
+                                        base64String += String.fromCharCode(data[i]);
+                                    }
+                                    cover = `data:${format};base64,${btoa(base64String)}`;
+                                }
+                                resolve();
+                            },
+                            onError: function() {
+                                resolve();
+                            }
+                        });
+                    });
+
+                    // Se não achou, tenta extrair do nome do arquivo
+                    if (!title || !artist) {
+                        let name = file.name.replace(/\.[^/.]+$/, "");
+                        if (name.includes(" - ")) {
+                            const parts = name.split(" - ");
+                            if (parts.length >= 2) {
+                                artist = artist || parts[0].trim();
+                                title = title || parts[1].trim();
+                            }
+                        } else {
+                            title = title || name;
                         }
                     }
 
-                    // Busca a capa do Deezer
-                    const cover = await fetchDeezerCover(title, artist);
+                    // Se não achou capa, busca no Deezer
+                    if (!cover) {
+                        cover = await fetchDeezerCover(title, artist);
+                    }
 
                     // Cria o objeto da música
+                    const arrayBuffer = await file.arrayBuffer();
                     const music = {
-                        title: title,
-                        artist: artist,
-                        album: album,
+                        title: title || "Desconhecido",
+                        artist: artist || "Desconhecido",
+                        album: album || "Desconhecido",
                         duration: "0:00",
-                        cover: cover, // agora vem do Deezer!
+                        cover: cover,
                         file: arrayBuffer,
                         fileType: file.type,
                         fileName: file.name,
@@ -1678,12 +1700,10 @@
                         const minutes = Math.floor(audio.duration / 60);
                         const seconds = Math.floor(audio.duration % 60);
                         music.duration = `${minutes}:${seconds.toString().padStart(2, '0')}`;
-                        
                         sortPlaylist();
                         updatePlaylistHTML();
                     });
 
-                    // Se for a primeira música, carrega ela
                     if (playlist.length === 1) {
                         currentTrack = 0;
                         loadTrack();
