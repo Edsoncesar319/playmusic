@@ -26,12 +26,19 @@ Um player de música web moderno e responsivo com suporte a upload de músicas, 
   - Tratamento de erros
   - Atualização automática da playlist
 
+- **Contas**
+  - Cadastro e login com sessão segura
+  - Edição de nome, e-mail e senha
+  - Exclusão da própria conta
+  - Biblioteca e uploads disponíveis apenas para usuários autenticados
+
 ## 🛠️ Tecnologias Utilizadas
 
 ### Frontend
 - HTML5
 - CSS3 (com animações e gradientes)
 - JavaScript (Vanilla)
+- Material Symbols Rounded para os ícones da interface
 - Design responsivo
 - Animações CSS
 - Gradientes e efeitos visuais
@@ -47,7 +54,11 @@ musickera/
 ├── index.html          # Interface do usuário
 ├── api/
 │   ├── music.js       # Lista músicas e capas do Blob
-│   └── upload.js      # Autoriza uploads diretos e limitados
+│   ├── upload.js      # Autoriza uploads diretos e limitados
+│   └── auth/          # Cadastro, login, sessão e gestão da própria conta
+├── database/
+│   └── schema.sql     # Tabelas de usuários e sessões do Neon
+├── lib/               # Acesso ao Neon e utilitários de autenticação
 ├── package.json       # Dependências das funções Vercel
 └── README.md         # Documentação
 ```
@@ -65,21 +76,28 @@ cd musickera
 npm install
 ```
 
-3. Conecte o armazenamento Blob ao projeto Vercel:
+3. Crie um banco PostgreSQL no Neon e execute [`database/schema.sql`](./database/schema.sql) no SQL Editor do Neon.
+
+4. Configure as variáveis de ambiente no painel da Vercel (Development, Preview e Production, conforme necessário):
+   - `DATABASE_URL`: connection string do Neon, de preferência a pooled connection string.
+   - `BLOB_READ_WRITE_TOKEN`: token do armazenamento Vercel Blob.
+
+   Para desenvolvimento local, defina essas variáveis no `.env.local` ou use `vercel env pull .env.local`. Nunca coloque credenciais no HTML, no JavaScript do navegador ou no repositório.
+
+5. Conecte o armazenamento Blob ao projeto Vercel:
    - No painel da Vercel, abra **Storage**, selecione o Blob store e conecte-o ao projeto.
    - Habilite os ambientes que serão usados. A Vercel disponibiliza `BLOB_READ_WRITE_TOKEN` para as funções.
-   - Para desenvolvimento local, use `vercel env pull .env.local` depois de instalar a CLI e vincular o projeto.
 
-   Nunca coloque o token no HTML, no JavaScript do navegador ou no repositório.
-
-4. Inicie o projeto localmente com a CLI da Vercel para que as rotas `/api` funcionem:
+6. Inicie o projeto localmente com a CLI da Vercel para que as rotas `/api` funcionem:
 ```bash
 npx vercel dev
 ```
 
-Em produção, publique o projeto na Vercel. Os uploads de áudio (até 100 MB) e de capas (até 10 MB) vão diretamente do navegador ao Blob; as funções mantêm o token no servidor. As faixas são listadas em `/api/music`, e uma capa pode ser enviada para a faixa selecionada. O player continua guardando uma cópia local dos áudios enviados pelo navegador.
+Em produção, publique o projeto na Vercel. Cada conta pode consultar e enviar arquivos para a biblioteca compartilhada; os endpoints de listagem e upload exigem uma sessão válida. Os uploads de áudio (até 100 MB) e de capas (até 10 MB) vão diretamente do navegador ao Blob; as funções mantêm o token no servidor. O player também mantém uma cópia local dos áudios no navegador, separada por conta.
 
-As rotas de upload são públicas e limitam os tipos e tamanhos de arquivo; para uma biblioteca privada, adicione autenticação antes de publicar.
+O Vercel Blob deste projeto usa arquivos públicos. A autenticação protege a listagem e a autorização de novos uploads, mas um URL público de arquivo já compartilhado pode ser aberto por qualquer pessoa que o possua.
+
+Os cookies de sessão são `HttpOnly`, `Secure` e `SameSite=Lax`; as senhas são armazenadas com scrypt. Para produção, configure também limitação de tentativas de login no firewall/WAF da Vercel.
 
 ## 💻 Uso
 
@@ -107,9 +125,10 @@ As rotas de upload são públicas e limitam os tipos e tamanhos de arquivo; para
 
 - Validação de tipos de arquivo
 - Nomes de arquivo seguros
-- Permissões de arquivo configuradas
-- Limite de tamanho de upload (100MB)
-- CORS configurado para desenvolvimento
+- Sessões autenticadas e protegidas contra acesso por origem externa
+- Senhas armazenadas com scrypt; nenhum segredo de banco ou Blob é enviado ao navegador
+- Limites de upload: áudio (100 MB) e capa (10 MB)
+- URLs do Blob são públicos; não use este armazenamento para conteúdo que exija confidencialidade do arquivo
 
 ## 🐛 Logs e Debug
 

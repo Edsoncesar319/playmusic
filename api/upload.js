@@ -1,4 +1,6 @@
 import { handleUpload } from '@vercel/blob/client';
+import { getCurrentUser } from '../lib/auth.js';
+import { isSameOrigin, sendJson } from '../lib/http.js';
 
 const audioTypes = [
     'audio/aac',
@@ -24,11 +26,25 @@ const uploadPathPattern = /^(music|covers)\/[0-9a-f-]{36}\/[\p{L}\p{N}._ -]{1,18
 export default async function handler(request, response) {
     if (request.method !== 'POST') {
         response.setHeader('Allow', 'POST');
-        return response.status(405).json({ error: 'Método não permitido.' });
+        return sendJson(response, 405, { error: 'Método não permitido.' });
+    }
+
+    if (!isSameOrigin(request)) {
+        return sendJson(response, 403, { error: 'Origem da solicitação não permitida.' });
+    }
+
+    try {
+        const user = await getCurrentUser(request);
+        if (!user) {
+            return sendJson(response, 401, { error: 'Autenticação necessária.' });
+        }
+    } catch (error) {
+        console.error('Falha ao verificar a sessão para upload:', error);
+        return sendJson(response, 500, { error: 'Não foi possível verificar a sessão.' });
     }
 
     if (!process.env.BLOB_READ_WRITE_TOKEN) {
-        return response.status(503).json({ error: 'O Vercel Blob não está configurado.' });
+        return sendJson(response, 503, { error: 'O Vercel Blob não está configurado.' });
     }
 
     try {
@@ -49,9 +65,9 @@ export default async function handler(request, response) {
             },
         });
 
-        return response.status(200).json(result);
+        return sendJson(response, 200, result);
     } catch (error) {
         console.error('Falha ao autorizar upload para o Vercel Blob:', error);
-        return response.status(400).json({ error: 'Não foi possível autorizar o upload.' });
+        return sendJson(response, 400, { error: 'Não foi possível autorizar o upload.' });
     }
 }

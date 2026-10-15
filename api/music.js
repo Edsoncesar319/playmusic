@@ -1,4 +1,6 @@
 import { list } from '@vercel/blob';
+import { getCurrentUser } from '../lib/auth.js';
+import { sendJson } from '../lib/http.js';
 
 async function listAll(prefix) {
     const blobs = [];
@@ -44,11 +46,21 @@ function getTrackDetails(pathname) {
 export default async function handler(request, response) {
     if (request.method !== 'GET') {
         response.setHeader('Allow', 'GET');
-        return response.status(405).json({ error: 'Método não permitido.' });
+        return sendJson(response, 405, { error: 'Método não permitido.' });
+    }
+
+    try {
+        const user = await getCurrentUser(request);
+        if (!user) {
+            return sendJson(response, 401, { error: 'Autenticação necessária.' });
+        }
+    } catch (error) {
+        console.error('Falha ao verificar a sessão para listar músicas:', error);
+        return sendJson(response, 500, { error: 'Não foi possível verificar a sessão.' });
     }
 
     if (!process.env.BLOB_READ_WRITE_TOKEN) {
-        return response.status(503).json({ error: 'O Vercel Blob não está configurado.' });
+        return sendJson(response, 503, { error: 'O Vercel Blob não está configurado.' });
     }
 
     try {
@@ -82,9 +94,9 @@ export default async function handler(request, response) {
             })
             .sort((a, b) => a.fileName.localeCompare(b.fileName, 'pt-BR'));
 
-        return response.status(200).json({ music });
+        return sendJson(response, 200, { music });
     } catch (error) {
         console.error('Falha ao listar arquivos do Vercel Blob:', error);
-        return response.status(500).json({ error: 'Não foi possível carregar a biblioteca do Blob.' });
+        return sendJson(response, 500, { error: 'Não foi possível carregar a biblioteca do Blob.' });
     }
 }

@@ -5,10 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#121212">
     <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="shortcut icon" href="favicon.ico" type="image/png" />
     <meta name="google-adsense-account" content="ca-pub-1074925740865557">
     <title>Musickera</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,400,0,0" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -1165,6 +1169,138 @@
             background: rgba(29, 185, 84, 0.05);
             border-left: 4px solid #1DB954;
         }
+
+        .material-symbols-rounded {
+            font-family: 'Material Symbols Rounded';
+            font-weight: normal;
+            font-style: normal;
+            font-size: 24px;
+            line-height: 1;
+            letter-spacing: normal;
+            text-transform: none;
+            display: inline-flex;
+            white-space: nowrap;
+            word-wrap: normal;
+            direction: ltr;
+            font-feature-settings: 'liga';
+            -webkit-font-feature-settings: 'liga';
+            -webkit-font-smoothing: antialiased;
+            align-items: center;
+            justify-content: center;
+            vertical-align: middle;
+        }
+
+        .material-icon-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .auth-panel {
+            width: min(520px, calc(100% - 32px));
+            margin: 28px auto;
+            padding: 28px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 20px;
+            background: rgba(18, 18, 18, 0.92);
+            box-shadow: 0 16px 48px rgba(0, 0, 0, 0.32);
+        }
+
+        .auth-panel h2 {
+            margin-bottom: 8px;
+            font-size: 24px;
+        }
+
+        .auth-description {
+            margin-bottom: 20px;
+            color: rgba(255, 255, 255, 0.65);
+            line-height: 1.5;
+        }
+
+        .auth-form {
+            display: grid;
+            gap: 14px;
+        }
+
+        .auth-form label {
+            display: grid;
+            gap: 6px;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 14px;
+        }
+
+        .auth-form input {
+            width: 100%;
+            min-height: 44px;
+            padding: 10px 12px;
+            border: 1px solid rgba(255, 255, 255, 0.16);
+            border-radius: 10px;
+            outline: none;
+            background: rgba(255, 255, 255, 0.07);
+            color: #fff;
+        }
+
+        .auth-form input:focus {
+            border-color: #1DB954;
+            box-shadow: 0 0 0 2px rgba(29, 185, 84, 0.18);
+        }
+
+        .auth-actions {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 4px;
+        }
+
+        .auth-button {
+            min-height: 42px;
+            padding: 9px 16px;
+            border: 0;
+            border-radius: 999px;
+            background: #1DB954;
+            color: #07190d;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .auth-button.secondary {
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            background: transparent;
+            color: #fff;
+        }
+
+        .auth-button.danger {
+            background: #b3261e;
+            color: #fff;
+        }
+
+        .auth-message {
+            min-height: 1.4em;
+            margin-top: 12px;
+            color: #ffb4ab;
+        }
+
+        .auth-message.success {
+            color: #86efac;
+        }
+
+        .auth-account-heading {
+            margin-bottom: 18px;
+            color: #1ed760;
+        }
+
+        .player-section[hidden],
+        .auth-panel[hidden],
+        .auth-view[hidden] {
+            display: none !important;
+        }
+
+        @media (max-width: 480px) {
+            .auth-panel {
+                padding: 20px;
+            }
+        }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/jsmediatags@3.9.7/dist/jsmediatags.min.js"></script>
 </head>
@@ -1180,10 +1316,7 @@
                 </select>
                 <div class="search-bar">
                     <span class="search-icon">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <circle cx="11" cy="11" r="8"></circle>
-                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                        </svg>
+                        <span class="material-symbols-rounded" aria-hidden="true">search</span>
                     </span>
                     <input type="text" placeholder="Buscar músicas ou playlists..." id="searchInput">
                 </div>
@@ -1193,10 +1326,71 @@
             </div>
         </div>
 
-        <div class="player-section">
+        <section class="auth-panel" id="authPanel" aria-live="polite">
+            <div class="auth-view" id="loginView">
+                <h2>Entrar na Musickera</h2>
+                <p class="auth-description">Entre para acessar a biblioteca compartilhada e enviar músicas.</p>
+                <form class="auth-form" id="loginForm">
+                    <label>E-mail
+                        <input type="email" name="email" autocomplete="email" maxlength="254" required>
+                    </label>
+                    <label>Senha
+                        <input type="password" name="password" autocomplete="current-password" required>
+                    </label>
+                    <div class="auth-actions">
+                        <button class="auth-button" type="submit"><span class="material-symbols-rounded" aria-hidden="true">login</span> Entrar</button>
+                        <button class="auth-button secondary" type="button" id="showRegister">Criar conta</button>
+                    </div>
+                </form>
+            </div>
+            <div class="auth-view" id="registerView" hidden>
+                <h2>Criar conta</h2>
+                <p class="auth-description">A senha deve ter pelo menos 12 caracteres.</p>
+                <form class="auth-form" id="registerForm">
+                    <label>Nome
+                        <input type="text" name="displayName" autocomplete="name" maxlength="80" required>
+                    </label>
+                    <label>E-mail
+                        <input type="email" name="email" autocomplete="email" maxlength="254" required>
+                    </label>
+                    <label>Senha
+                        <input type="password" name="password" autocomplete="new-password" minlength="12" maxlength="128" required>
+                    </label>
+                    <div class="auth-actions">
+                        <button class="auth-button" type="submit"><span class="material-symbols-rounded" aria-hidden="true">person_add</span> Criar conta</button>
+                        <button class="auth-button secondary" type="button" id="showLogin">Já tenho conta</button>
+                    </div>
+                </form>
+            </div>
+            <div class="auth-view" id="profileView" hidden>
+                <h2 class="auth-account-heading" id="accountHeading">Minha conta</h2>
+                <form class="auth-form" id="profileForm">
+                    <label>Nome
+                        <input type="text" name="displayName" autocomplete="name" maxlength="80" required>
+                    </label>
+                    <label>E-mail
+                        <input type="email" name="email" autocomplete="email" maxlength="254" required>
+                    </label>
+                    <label>Senha atual (necessária para trocar e-mail ou senha)
+                        <input type="password" name="currentPassword" autocomplete="current-password">
+                    </label>
+                    <label>Nova senha (opcional)
+                        <input type="password" name="newPassword" autocomplete="new-password" minlength="12" maxlength="128">
+                    </label>
+                    <div class="auth-actions">
+                        <button class="auth-button" type="submit"><span class="material-symbols-rounded" aria-hidden="true">save</span> Salvar alterações</button>
+                        <button class="auth-button secondary" type="button" id="logoutButton"><span class="material-symbols-rounded" aria-hidden="true">logout</span> Sair</button>
+                        <button class="auth-button danger" type="button" id="deleteAccountButton"><span class="material-symbols-rounded" aria-hidden="true">delete</span> Excluir conta</button>
+                    </div>
+                </form>
+            </div>
+            <p class="auth-message" id="authMessage" role="status"></p>
+        </section>
+
+        <div class="player-section" id="playerSection" hidden>
             <div class="player-container">
                 <div class="now-playing">
-                    <img src="musics/havera.jpeg" alt="Album Cover" class="album-cover">
+                    <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1 1'%3E%3Crect width='1' height='1' fill='%23181818'/%3E%3C/svg%3E" alt="Capa do álbum" class="album-cover">
                     <div class="track-info">
                         <h2 class="track-title">Nome da Música</h2>
                         <p class="artist-name">Artista</p>
@@ -1215,25 +1409,21 @@
 
                 <div class="controls">
                     <button class="control-button" onclick="previousTrack()" title="Anterior">
-                        <!-- Ícone SVG de voltar -->
-                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="19 20 9 12 19 4 19 20"></polygon><line x1="9" y1="19" x2="9" y2="5"></line></svg>
+                        <span class="material-symbols-rounded" aria-hidden="true">skip_previous</span>
                     </button>
                     <button class="control-button" onclick="togglePlay()" title="Play/Pause">
-                        <!-- Ícone SVG de play (pode ser trocado por pause via JS) -->
-                        <svg id="playPauseIcon" width="36" height="36" viewBox="0 0 24 24" fill="currentColor"><polygon points="6,4 22,12 6,20"></polygon></svg>
+                        <span id="playPauseIcon" class="material-symbols-rounded" aria-hidden="true">play_arrow</span>
                     </button>
                     <button class="control-button" onclick="nextTrack()" title="Próxima">
-                        <!-- Ícone SVG de avançar -->
-                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 4 15 12 5 20 5 4"></polygon><line x1="15" y1="5" x2="15" y2="19"></line></svg>
+                        <span class="material-symbols-rounded" aria-hidden="true">skip_next</span>
                     </button>
                     <button class="control-button" onclick="toggleRepeat()" id="repeatButton" title="Repetir">
-                        <!-- Ícone SVG de repetir -->
-                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"></polyline><path d="M3 11V9a4 4 0 0 1 4-4h14"></path><polyline points="7 23 3 19 7 15"></polyline><path d="M21 13v2a4 4 0 0 1-4 4H3"></path></svg>
+                        <span id="repeatIcon" class="material-symbols-rounded" aria-hidden="true">repeat</span>
                     </button>
                 </div>
 
                 <div class="volume-container">
-                    <span>🔈</span>
+                    <span class="material-symbols-rounded" aria-hidden="true">volume_up</span>
                     <input type="range" class="volume-slider" min="0" max="100" value="100">
                 </div>
             </div>
@@ -1242,10 +1432,10 @@
                 <div class="playlist-title">
                     <h3>Playlist</h3>
                     <button class="upload-button" onclick="document.getElementById('fileInput').click()">
-                        <span>📁</span> Upload
+                        <span class="material-symbols-rounded" aria-hidden="true">upload_file</span> Upload
                     </button>
                     <button class="upload-button" onclick="document.getElementById('coverInput').click()">
-                        <span>🖼️</span> Capa
+                        <span class="material-symbols-rounded" aria-hidden="true">image</span> Capa
                     </button>
                 </div>
                 <input type="file" id="fileInput" accept="audio/*" multiple onchange="handleFileUpload(event)" style="display: none;">
@@ -1259,35 +1449,25 @@
     </div>
 
     <script>
-        const playlist = [
-            {
-                title: "Haverá Sinais",
-                artist: "Canção de Jorge & Mateus e Lauana Prado",
-                album: "Check-In",
-                duration: "3:45",
-                cover: "/",
-                file: "Haverá Sinais.mp3",
-                trackNumber: 1
-            },
-            
-
-           
-        ];
+        const playlist = [];
 
         let currentTrack = 0;
         let isPlaying = false;
         let audio = new Audio();
         let repeatMode = 'none'; // 'none', 'one', 'all'
+        let currentUser = null;
 
         // Configuração do IndexedDB
         const dbName = 'MusickeraDB';
         const dbVersion = 1;
+        const defaultCover = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1 1'%3E%3Crect width='1' height='1' fill='%23181818'/%3E%3C/svg%3E";
         let db;
 
         // Função para inicializar o banco de dados
-        function initDB() {
+        function initDB(userId) {
             return new Promise((resolve, reject) => {
-                const request = indexedDB.open(dbName, dbVersion);
+                db?.close();
+                const request = indexedDB.open(`${dbName}:${userId}`, dbVersion);
 
                 request.onerror = (event) => {
                     console.error('Erro ao abrir o banco de dados:', event.target.error);
@@ -1313,6 +1493,175 @@
                 };
             });
         }
+
+        function showAuthView(viewName) {
+            for (const name of ['login', 'register', 'profile']) {
+                document.getElementById(`${name}View`).hidden = name !== viewName;
+            }
+            document.getElementById('authMessage').textContent = '';
+            document.getElementById('authMessage').classList.remove('success');
+        }
+
+        function setAuthMessage(message, isSuccess = false) {
+            const authMessage = document.getElementById('authMessage');
+            authMessage.textContent = message;
+            authMessage.classList.toggle('success', isSuccess);
+        }
+
+        async function sendAuthRequest(url, method, payload) {
+            const options = {
+                method,
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'same-origin'
+            };
+            if (payload !== undefined) options.body = JSON.stringify(payload);
+
+            const response = await fetch(url, options);
+            let result = {};
+            try {
+                result = await response.json();
+            } catch {
+                result = {};
+            }
+
+            if (!response.ok) {
+                const error = new Error(result.error || 'Não foi possível concluir a solicitação.');
+                error.status = response.status;
+                throw error;
+            }
+            return result;
+        }
+
+        async function activateUser(user) {
+            currentUser = user;
+            document.getElementById('accountHeading').textContent = `Olá, ${user.displayName}`;
+            const profileForm = document.getElementById('profileForm');
+            profileForm.elements.displayName.value = user.displayName;
+            profileForm.elements.email.value = user.email;
+            profileForm.elements.currentPassword.value = '';
+            profileForm.elements.newPassword.value = '';
+            showAuthView('profile');
+            document.getElementById('playerSection').hidden = false;
+
+            try {
+                await initDB(user.id);
+                await loadPlaylistFromDB();
+            } catch (error) {
+                console.error('Falha ao carregar a biblioteca local:', error);
+                setAuthMessage('Não foi possível abrir a biblioteca local neste navegador.');
+            }
+        }
+
+        function clearUserState(message = '') {
+            currentUser = null;
+            db?.close();
+            db = null;
+            audio.pause();
+            audio.removeAttribute('src');
+            audio.load();
+            isPlaying = false;
+            for (const track of playlist) {
+                if (typeof track.file === 'string' && track.file.startsWith('blob:')) {
+                    URL.revokeObjectURL(track.file);
+                }
+            }
+            playlist.length = 0;
+            currentTrack = 0;
+            updatePlaylistHTML();
+            document.getElementById('playerSection').hidden = true;
+            showAuthView('login');
+            if (message) setAuthMessage(message);
+        }
+
+        async function initializeAuthentication() {
+            try {
+                const response = await fetch('/api/auth/me', { credentials: 'same-origin' });
+                if (response.status === 401) {
+                    showAuthView('login');
+                    return;
+                }
+                if (!response.ok) {
+                    throw new Error(`A API de autenticação respondeu com status ${response.status}.`);
+                }
+                const { user } = await response.json();
+                await activateUser(user);
+            } catch (error) {
+                console.error('Falha ao verificar a sessão:', error);
+                showAuthView('login');
+                setAuthMessage('Não foi possível conectar à autenticação. Verifique a configuração do servidor.');
+            }
+        }
+
+        document.getElementById('showRegister').addEventListener('click', () => showAuthView('register'));
+        document.getElementById('showLogin').addEventListener('click', () => showAuthView('login'));
+
+        document.getElementById('loginForm').addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const form = event.currentTarget;
+            const payload = Object.fromEntries(new FormData(form));
+            try {
+                const { user } = await sendAuthRequest('/api/auth/login', 'POST', payload);
+                form.reset();
+                await activateUser(user);
+            } catch (error) {
+                setAuthMessage(error.message);
+            }
+        });
+
+        document.getElementById('registerForm').addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const form = event.currentTarget;
+            const payload = Object.fromEntries(new FormData(form));
+            try {
+                const { user } = await sendAuthRequest('/api/auth/register', 'POST', payload);
+                form.reset();
+                await activateUser(user);
+            } catch (error) {
+                setAuthMessage(error.message);
+            }
+        });
+
+        document.getElementById('profileForm').addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const form = event.currentTarget;
+            const { displayName, email, currentPassword, newPassword } = Object.fromEntries(new FormData(form));
+            try {
+                const { user } = await sendAuthRequest('/api/auth/me', 'PATCH', {
+                    displayName,
+                    email,
+                    currentPassword,
+                    newPassword
+                });
+                currentUser = user;
+                document.getElementById('accountHeading').textContent = `Olá, ${user.displayName}`;
+                form.elements.currentPassword.value = '';
+                form.elements.newPassword.value = '';
+                setAuthMessage('Dados da conta atualizados.', true);
+            } catch (error) {
+                if (error.status === 401) clearUserState('Sua sessão expirou. Entre novamente.');
+                else setAuthMessage(error.message);
+            }
+        });
+
+        document.getElementById('logoutButton').addEventListener('click', async () => {
+            try {
+                await sendAuthRequest('/api/auth/logout', 'POST');
+                clearUserState();
+            } catch (error) {
+                setAuthMessage(error.message);
+            }
+        });
+
+        document.getElementById('deleteAccountButton').addEventListener('click', async () => {
+            if (!confirm('Excluir sua conta permanentemente? Essa ação não pode ser desfeita.')) return;
+            try {
+                await sendAuthRequest('/api/auth/me', 'DELETE');
+                clearUserState('Conta excluída.');
+            } catch (error) {
+                if (error.status === 401) clearUserState('Sua sessão expirou. Entre novamente.');
+                else setAuthMessage(error.message);
+            }
+        });
 
         // Função para salvar uma música no banco de dados
         async function saveMusicToDB(music) {
@@ -1391,6 +1740,10 @@
             });
         }
 
+        function updatePlayButtonIcon() {
+            document.getElementById('playPauseIcon').textContent = isPlaying ? 'pause' : 'play_arrow';
+        }
+
         function updatePlayerInfo(track) {
             if (track.source === 'deezer') {
                 // Para músicas do Deezer, não atualiza o player padrão
@@ -1400,7 +1753,7 @@
             document.querySelector('.track-title').textContent = track.title;
             document.querySelector('.artist-name').textContent = track.artist;
             document.querySelector('.album-name').textContent = track.album;
-            document.querySelector('.album-cover').src = track.cover;
+            document.querySelector('.album-cover').src = track.cover || defaultCover;
             document.querySelector('.album-cover').alt = `${track.title} - ${track.artist}`;
             document.querySelector('.duration').textContent = track.duration;
             
@@ -1412,21 +1765,22 @@
         }
 
         function nextTrack() {
+            if (playlist.length === 0) return;
             currentTrack = (currentTrack + 1) % playlist.length;
             loadTrack();
-            // Atualiza o botão de play para mostrar o estado correto
-            document.querySelector('.control-button:nth-child(2)').textContent = isPlaying ? '⏸' : '⏯';
+            updatePlayButtonIcon();
         }
 
         function previousTrack() {
+            if (playlist.length === 0) return;
             currentTrack = (currentTrack - 1 + playlist.length) % playlist.length;
             loadTrack();
-            // Atualiza o botão de play para mostrar o estado correto
-            document.querySelector('.control-button:nth-child(2)').textContent = isPlaying ? '⏸' : '⏯';
+            updatePlayButtonIcon();
         }
 
         function loadTrack() {
             const track = playlist[currentTrack];
+            if (!track) return;
             
             if (track.source === 'deezer') {
                 // Para músicas do Deezer, carrega o player incorporado
@@ -1613,8 +1967,8 @@
                         ${track.source === 'deezer' ? 
                             `<img src='${track.album_cover}' alt='Capa' style='width:32px;height:32px;border-radius:4px;margin-right:8px;object-fit:cover;vertical-align:middle;'>` : ''}
                         ${track.source === 'deezer' ? 
-                            '<button class="add-track" onclick="event.stopPropagation(); addDeezerTrack(' + JSON.stringify(track).replace(/"/g, '&quot;') + ')">+</button>' : 
-                            (track.blobId ? '' : '<button class="remove-track" onclick="event.stopPropagation(); removeTrack(' + playlist.indexOf(track) + ')">×</button>')}
+                            '<button class="add-track material-icon-button" title="Adicionar à playlist" aria-label="Adicionar à playlist" onclick="event.stopPropagation(); addDeezerTrack(' + JSON.stringify(track).replace(/"/g, '&quot;') + ')"><span class="material-symbols-rounded" aria-hidden="true">add_circle</span></button>' :
+                            (track.blobId ? '' : '<button class="remove-track material-icon-button" title="Remover música" aria-label="Remover música" onclick="event.stopPropagation(); removeTrack(' + playlist.indexOf(track) + ')"><span class="material-symbols-rounded" aria-hidden="true">delete</span></button>')}
                     </li>
                 `).join('');
 
@@ -1649,6 +2003,12 @@
         function updatePlaylistHTML() {
             const trackList = document.querySelector('.track-list');
             const clearButton = document.querySelector('.clear-playlist');
+
+            if (playlist.length === 0) {
+                trackList.innerHTML = '<li class="no-results">Sua playlist está vazia. Envie uma música para começar.</li>';
+                clearButton.style.display = 'none';
+                return;
+            }
             
             // Atualiza a lista de músicas
             trackList.innerHTML = playlist.map((track, index) => `
@@ -1660,7 +2020,7 @@
                         <div class="artist-name-small">${track.artist}</div>
                     </div>
                     <span class="track-duration">${track.duration}</span>
-                    ${track.blobId ? '' : `<button class="remove-track" onclick="event.stopPropagation(); removeTrack(${index})">×</button>`}
+                    ${track.blobId ? '' : `<button class="remove-track material-icon-button" title="Remover música" aria-label="Remover música" onclick="event.stopPropagation(); removeTrack(${index})"><span class="material-symbols-rounded" aria-hidden="true">delete</span></button>`}
                 </li>
             `).join('');
             
@@ -1734,9 +2094,7 @@
         }
 
         // Inicializa o player com as durações atualizadas
-        updateDurations();
         updatePlaylistHTML();
-        loadTrack();
 
         // Event Listeners
         document.querySelector('.progress-container').addEventListener('click', function(e) {
@@ -1785,6 +2143,7 @@
 
         function togglePlay() {
             const track = playlist[currentTrack];
+            if (!track) return;
             
             if (track.source === 'deezer') {
                 // Para músicas do Deezer, recarrega o iframe com o novo estado de autoplay
@@ -1795,16 +2154,15 @@
             } else {
                 if (isPlaying) {
                     audio.pause();
-                    document.querySelector('.control-button:nth-child(2)').textContent = '⏯';
                 } else {
                     audio.play().catch(error => {
                         console.error('Erro ao reproduzir áudio:', error);
                         alert('Erro ao reproduzir a música. Verifique se o arquivo existe.');
                     });
-                    document.querySelector('.control-button:nth-child(2)').textContent = '⏸';
                 }
             }
             isPlaying = !isPlaying;
+            updatePlayButtonIcon();
         }
 
         // Função para processar URLs do Deezer
@@ -1884,6 +2242,7 @@
 
         function loadTrack() {
             const track = playlist[currentTrack];
+            if (!track) return;
             
             if (track.source === 'deezer') {
                 // Para músicas do Deezer, carrega o player incorporado
@@ -1964,7 +2323,7 @@
             } catch (error) {
                 console.error('Erro ao buscar capa do Deezer:', error);
             }
-            return 'musics/default-cover.jpg';
+            return defaultCover;
         }
 
         // Atualiza a função handleFileUpload para incluir suporte a URLs do Deezer
@@ -2054,7 +2413,7 @@
                         music.file = arrayBuffer;
                     }
 
-                    if (remoteMusic && cover.startsWith('data:')) {
+                    if (remoteMusic && cover.startsWith('data:') && cover !== defaultCover) {
                         try {
                             const coverFile = await (await fetch(cover)).blob();
                             const extension = getImageExtension(coverFile.type);
@@ -2161,8 +2520,13 @@
 
         // Função para atualizar a lista de músicas do diretório
         async function updateMusicList() {
+            if (!currentUser) return;
             try {
                 const response = await fetch('/api/music');
+                if (response.status === 401) {
+                    clearUserState('Sua sessão expirou. Entre novamente.');
+                    return;
+                }
                 if (!response.ok) {
                     throw new Error(`A API do Blob respondeu com status ${response.status}.`);
                 }
@@ -2182,7 +2546,7 @@
                         continue;
                     }
 
-                    music.cover = music.cover || 'musics/default-cover.jpg';
+                    music.cover = music.cover || defaultCover;
                     playlist.push(music);
                 }
 
@@ -2194,7 +2558,9 @@
         }
 
         // Atualiza a biblioteca remota periodicamente.
-        setInterval(updateMusicList, 30000);
+        setInterval(() => {
+            if (currentUser) updateMusicList();
+        }, 30000);
 
         // Função para tocar uma música específica
         function playTrack(index) {
@@ -2210,21 +2576,22 @@
 
         function toggleRepeat() {
             const repeatButton = document.getElementById('repeatButton');
+            const repeatIcon = document.getElementById('repeatIcon');
             switch (repeatMode) {
                 case 'none':
                     repeatMode = 'one';
                     repeatButton.classList.add('active');
-                    repeatButton.textContent = '🔂';
+                    repeatIcon.textContent = 'repeat_one';
                     break;
                 case 'one':
                     repeatMode = 'all';
                     repeatButton.classList.add('active');
-                    repeatButton.textContent = '🔁';
+                    repeatIcon.textContent = 'repeat';
                     break;
                 case 'all':
                     repeatMode = 'none';
                     repeatButton.classList.remove('active');
-                    repeatButton.textContent = '🔁';
+                    repeatIcon.textContent = 'repeat';
                     break;
             }
         }
@@ -2234,16 +2601,18 @@
 
         // Função para salvar a playlist no localStorage
         function savePlaylist() {
+            if (!currentUser) return;
             const playlistData = playlist.map(track => ({
                 ...track,
                 file: track.file // Salva a URL do arquivo
             }));
-            localStorage.setItem('musickeraPlaylist', JSON.stringify(playlistData));
+            localStorage.setItem(`musickeraPlaylist:${currentUser.id}`, JSON.stringify(playlistData));
         }
 
         // Função para carregar a playlist do localStorage
         function loadPlaylist() {
-            const savedPlaylist = localStorage.getItem('musickeraPlaylist');
+            if (!currentUser) return;
+            const savedPlaylist = localStorage.getItem(`musickeraPlaylist:${currentUser.id}`);
             if (savedPlaylist) {
                 const parsedPlaylist = JSON.parse(savedPlaylist);
                 playlist.length = 0; // Limpa a playlist atual
@@ -2295,7 +2664,7 @@
                 document.querySelector('.track-title').textContent = "Nenhuma música";
                 document.querySelector('.artist-name').textContent = "";
                 document.querySelector('.album-name').textContent = "";
-                document.querySelector('.album-cover').src = "musics/default-cover.jpg";
+                document.querySelector('.album-cover').src = defaultCover;
                 document.querySelector('.progress-bar').style.width = "0%";
                 document.querySelector('.current-time').textContent = "0:00";
                 document.querySelector('.duration').textContent = "0:00";
@@ -2324,7 +2693,7 @@
                         document.querySelector('.track-title').textContent = "Nenhuma música";
                         document.querySelector('.artist-name').textContent = "";
                         document.querySelector('.album-name').textContent = "";
-                        document.querySelector('.album-cover').src = "musics/default-cover.jpg";
+                        document.querySelector('.album-cover').src = defaultCover;
                         document.querySelector('.progress-bar').style.width = "0%";
                         document.querySelector('.current-time').textContent = "0:00";
                         document.querySelector('.duration').textContent = "0:00";
@@ -2361,11 +2730,7 @@
         }
 
         // Inicializa o banco de dados e carrega a playlist local e remota.
-        initDB().then(() => {
-            loadPlaylistFromDB();
-        }).catch(error => {
-            console.error('Erro ao inicializar banco de dados:', error);
-        });
+        initializeAuthentication();
 
         const platformSelector = document.getElementById('platformSelector');
         const searchResults = document.getElementById('searchResults');
@@ -2443,10 +2808,7 @@
                     </div>
                     <span class="search-result-platform">${result.platform}</span>
                     <button class="import-button">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <line x1="12" y1="5" x2="12" y2="19"></line>
-                            <line x1="5" y1="12" x2="19" y2="12"></line>
-                        </svg>
+                        <span class="material-symbols-rounded" aria-hidden="true">add</span>
                         Importar
                     </button>
                 </div>
