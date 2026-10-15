@@ -1721,6 +1721,15 @@
             });
         }
 
+        async function updateMusicInDB(music) {
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction(['musics'], 'readwrite');
+                const request = transaction.objectStore('musics').put(music);
+                request.onsuccess = () => resolve();
+                request.onerror = () => reject(request.error);
+            });
+        }
+
         // Função para limpar todas as músicas do banco de dados
         async function clearMusicDB() {
             return new Promise((resolve, reject) => {
@@ -2016,11 +2025,12 @@
                     onclick="playTrack(${index})">
                     <span class="track-number">${(index + 1).toString().padStart(2, '0')}</span>
                     <div class="track-info-small">
-                        <div class="track-title-small">${track.title}</div>
-                        <div class="artist-name-small">${track.artist}</div>
+                        <div class="track-title-small">${escapeHTML(track.title)}</div>
+                        <div class="artist-name-small">${escapeHTML(track.artist)}</div>
                     </div>
                     <span class="track-duration">${track.duration}</span>
-                    ${track.blobId ? '' : `<button class="remove-track material-icon-button" title="Remover música" aria-label="Remover música" onclick="event.stopPropagation(); removeTrack(${index})"><span class="material-symbols-rounded" aria-hidden="true">delete</span></button>`}
+                ${track.blobId ? `<button class="remove-track material-icon-button" title="Remover música" aria-label="Remover música" onclick="event.stopPropagation(); removeTrack(${index})"><span class="material-symbols-rounded" aria-hidden="true">delete</span></button>` : ''}
+                <button class="remove-track material-icon-button" title="Editar música" aria-label="Editar música" onclick="event.stopPropagation(); editTrack(${index})"><span class="material-symbols-rounded" aria-hidden="true">edit</span></button>
                 </li>
             `).join('');
             
@@ -2028,6 +2038,16 @@
             clearButton.style.display = playlist.some(track => !track.blobId) ? 'block' : 'none';
             
             adjustFontSize();
+        }
+
+        function escapeHTML(value) {
+            return String(value).replace(/[&<>"']/g, character => ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#39;'
+            })[character]);
         }
 
         // Função para formatar a duração da música
@@ -2332,7 +2352,13 @@
             if (!files.length) return;
 
             for (const file of files) {
-                if (!file.type.startsWith('audio/')) continue;
+                const extension = file.name.match(/\.[^.]+$/)?.[0].toLowerCase() || '';
+                const supportedExtensions = ['.aac', '.flac', '.m4a', '.mp3', '.mp4', '.oga', '.ogg', '.wav', '.webm'];
+                if (!supportedExtensions.includes(extension) ||
+                    (file.type && !file.type.startsWith('audio/') && file.type !== 'application/octet-stream')) {
+                    alert(`Formato de áudio não suportado: ${file.name}`);
+                    continue;
+                }
 
                 try {
                     // Lê os metadados ID3
@@ -2341,8 +2367,9 @@
                     let album = "";
                     let cover = "";
 
-                    await new Promise((resolve) => {
-                        window.jsmediatags.read(file, {
+                    if (window.jsmediatags?.read) {
+                        await new Promise((resolve) => {
+                            window.jsmediatags.read(file, {
                             onSuccess: function(tag) {
                                 title = tag.tags.title || "";
                                 artist = tag.tags.artist || "";
@@ -2361,7 +2388,8 @@
                                 resolve();
                             }
                         });
-                    });
+                        });
+                    }
 
                     // Se não achou, tenta extrair do nome do arquivo
                     if (!title || !artist) {
@@ -2402,16 +2430,8 @@
                         `${music.artist} -- ${music.album} -- ${music.title}${extension}`
                     );
 
-                    let remoteMusic;
-                    try {
-                        remoteMusic = await uploadToBackend(file, `music/${blobId}/${blobFileName}`);
-                        music.file = remoteMusic.url;
-                    } catch (error) {
-                        console.error('Falha ao enviar música para o Vercel Blob:', error);
-                        alert(`A música ${file.name} será salva apenas neste navegador porque o upload para o Blob falhou.`);
-                        music.blobId = undefined;
-                        music.file = arrayBuffer;
-                    }
+                    const remoteMusic = await uploadToBackend(file, `music/${blobId}/${blobFileName}`);
+                    music.file = remoteMusic.url;
 
                     if (remoteMusic && cover.startsWith('data:') && cover !== defaultCover) {
                         try {
@@ -2436,6 +2456,7 @@
 
                     // Adiciona à playlist
                     playlist.push(music);
+                    sortPlaylist();
 
                     // Atualiza a duração
                     const audio = new Audio(music.file);
@@ -2453,7 +2474,7 @@
                     }
                 } catch (error) {
                     console.error('Erro ao processar arquivo:', error);
-                    alert(`Erro ao processar o arquivo ${file.name}`);
+                    alert(`Não foi possível inserir ${file.name}: ${error.message}`);
                 }
             }
 
@@ -2500,6 +2521,59 @@
             return result;
         }
 
+        async function sendMusicRequest(url, method, payload) {
+            const options = { method, credentials: 'same-origin' };
+            if (payload !== undefined) {
+                options.headers = { 'Content-Type': 'application/json' };
+                options.body = JSON.stringify(payload);
+            }
+            const response = await fetch(url, options);
+            let result = {};
+            try {
+                result = await response.json();
+            } catch {
+                result = {};
+            }
+            if (!response.ok) {
+                const error = new Error(result.error || `A API respondeu com status ${response.status}.`);
+                error.status = response.status;
+                throw error;
+            }
+            return result;
+        }
+
+        async function editTrack(index) {
+            const track = playlist[index];
+            if (!track) return;
+            const title = prompt('Título da música:', track.title);
+            if (title === null) return;
+            const artist = prompt('Artista:', track.artist);
+            if (artist === null) return;
+            const album = prompt('Álbum:', track.album);
+            if (album === null) return;
+
+            const updatedTrack = { ...track, title: title.trim(), artist: artist.trim(), album: album.trim() };
+            if (!updatedTrack.title || !updatedTrack.artist || !updatedTrack.album) {
+                alert('Título, artista e álbum são obrigatórios.');
+                return;
+            }
+            try {
+                if (track.blobId) {
+                    await sendMusicRequest(`/api/music/${encodeURIComponent(track.blobId)}`, 'PATCH', {
+                        title: updatedTrack.title,
+                        artist: updatedTrack.artist,
+                        album: updatedTrack.album
+                    });
+                }
+                if (track.id) await updateMusicInDB(updatedTrack);
+                Object.assign(track, updatedTrack);
+                sortPlaylist();
+            } catch (error) {
+                if (error.status === 401) clearUserState('Sua sessão expirou. Entre novamente.');
+                else alert(`Não foi possível atualizar a música: ${error.message}`);
+            }
+        }
+
         async function handleCoverUpload(event) {
             const file = event.target.files[0];
             event.target.value = '';
@@ -2521,8 +2595,8 @@
                 updatePlayerInfo(track);
                 updatePlaylistHTML();
             } catch (error) {
-                console.error('Erro ao enviar a capa para o Vercel Blob:', error);
-                alert('Não foi possível enviar a capa. Verifique o formato, o tamanho e a configuração do Blob.');
+                console.error('Erro ao enviar a capa para o backend:', error);
+                alert(`Não foi possível enviar a capa: ${error.message}`);
             }
         }
 
@@ -2637,10 +2711,8 @@
 
         // Função para remover uma música da playlist
         async function removeTrack(index) {
-            if (playlist[index]?.blobId) {
-                alert('As músicas do Blob não podem ser removidas pelo player. Gerencie esses arquivos no painel da Vercel.');
-                return;
-            }
+            const track = playlist[index];
+            if (!track) return;
 
             if (index === currentTrack) {
                 // Se estiver removendo a música atual, para a reprodução
@@ -2648,7 +2720,16 @@
                 isPlaying = false;
             }
             
-            const track = playlist[index];
+            try {
+                if (track.blobId) {
+                    await sendMusicRequest(`/api/music/${encodeURIComponent(track.blobId)}`, 'DELETE');
+                }
+            } catch (error) {
+                if (error.status === 401) clearUserState('Sua sessão expirou. Entre novamente.');
+                else alert(`Não foi possível remover a música: ${error.message}`);
+                return;
+            }
+
             if (track.id) {
                 try {
                     await removeMusicFromDB(track.id);

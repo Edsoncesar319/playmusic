@@ -84,7 +84,9 @@ py -m uvicorn backend.app:app --reload
 ```
 Abra http://127.0.0.1:8000. Para verificar se a API está ativa, acesse http://127.0.0.1:8000/api/health. Se o comando `py` não estiver disponível, use `python` no lugar dele.
 
-O backend Python implementa as rotas `/api/auth/*`, `/api/music` e `/api/upload`, com sessões autenticadas e limites de 100 MB para áudio e 10 MB para capas. O banco SQLite e os arquivos enviados ficam em `data/`; defina `MUSICKERA_DATA_DIR` para escolher outro diretório. As faixas são servidas pelo próprio backend em `/media/`. Esses dados locais não são sincronizados com a implantação Vercel.
+O arquivo `setup.bat` também inicia esse backend. Abra a aplicação em `http://127.0.0.1:8000` — não use o Live Server, pois ele serve a página em outra porta e as chamadas `/api` não chegam ao backend.
+
+O backend Python implementa as rotas `/api/auth/*`, `/api/music`, `/api/music/{track_id}` (edição e exclusão) e `/api/upload`, com sessões autenticadas e limites de 100 MB para áudio e 10 MB para capas. O banco SQLite e os arquivos enviados ficam em `data/`; defina `MUSICKERA_DATA_DIR` para escolher outro diretório. As faixas são servidas pelo próprio backend em `/media/`. Esses dados locais não são sincronizados com a implantação Vercel.
 
 Execute os testes do backend com:
 ```bash

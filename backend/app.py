@@ -151,6 +151,12 @@ class ProfileInput(BaseModel):
     newPassword: Optional[str] = None
 
 
+class MusicUpdateInput(BaseModel):
+    title: str
+    artist: str
+    album: str
+
+
 def normalize_email(value: str) -> Optional[str]:
     email = value.strip().lower()
     if len(email) > 254 or not EMAIL_PATTERN.fullmatch(email):
@@ -311,6 +317,15 @@ def parse_track_name(file_name: str) -> dict[str, str]:
         "artist": "Artista desconhecido",
         "album": "Álbum desconhecido",
     }
+
+
+def valid_music_metadata(title: str, artist: str, album: str) -> bool:
+    values = (title.strip(), artist.strip(), album.strip())
+    file_name = " -- ".join(values) + ".mp3"
+    return (
+        all(1 <= len(value) <= 80 and " -- " not in value for value in values)
+        and len(file_name) <= 180
+    )
 
 
 @app.get("/", include_in_schema=False)
@@ -494,6 +509,66 @@ async def list_music(request: Request) -> JSONResponse:
     music.sort(key=lambda track: track["fileName"].casefold())
     return JSONResponse(
         content={"music": music},
+        headers={"Cache-Control": "no-store"},
+    )
+
+
+@app.patch("/api/music/{track_id}")
+async def update_music(
+    request: Request, track_id: str, payload: MusicUpdateInput
+) -> JSONResponse:
+    require_user(request)
+    require_same_origin(request)
+    if not re.fullmatch(r"[0-9a-f-]{36}", track_id, re.IGNORECASE):
+        raise HTTPException(status_code=404, detail="Música não encontrada.")
+    if not valid_music_metadata(payload.title, payload.artist, payload.album):
+        raise HTTPException(status_code=400, detail="Informe título, artista e álbum válidos.")
+
+    with database() as connection:
+        row = connection.execute(
+            "SELECT file_name FROM uploads WHERE track_id = ? AND kind = 'music'",
+            (track_id.lower(),),
+        ).fetchone()
+        if row is None:
+            raise HTTPException(status_code=404, detail="Música não encontrada.")
+        extension = Path(row["file_name"]).suffix.lower()
+        file_name = (
+            f"{payload.artist.strip()} -- {payload.album.strip()} -- "
+            f"{payload.title.strip()}{extension}"
+        )
+        if len(file_name) > 180:
+            raise HTTPException(status_code=400, detail="Os dados da música são muito longos.")
+        connection.execute(
+            "UPDATE uploads SET file_name = ? WHERE track_id = ? AND kind = 'music'",
+            (file_name, track_id.lower()),
+        )
+
+    return JSONResponse(
+        content={"success": True},
+        headers={"Cache-Control": "no-store"},
+    )
+
+
+@app.delete("/api/music/{track_id}")
+async def delete_music(request: Request, track_id: str) -> JSONResponse:
+    require_user(request)
+    require_same_origin(request)
+    if not re.fullmatch(r"[0-9a-f-]{36}", track_id, re.IGNORECASE):
+        raise HTTPException(status_code=404, detail="Música não encontrada.")
+
+    with database() as connection:
+        rows = connection.execute(
+            "SELECT stored_name FROM uploads WHERE track_id = ?",
+            (track_id.lower(),),
+        ).fetchall()
+        if not any(row["stored_name"] for row in rows):
+            raise HTTPException(status_code=404, detail="Música não encontrada.")
+        connection.execute("DELETE FROM uploads WHERE track_id = ?", (track_id.lower(),))
+
+    for row in rows:
+        (UPLOAD_DIR / row["stored_name"]).unlink(missing_ok=True)
+    return JSONResponse(
+        content={"success": True},
         headers={"Cache-Control": "no-store"},
     )
 

@@ -108,6 +108,46 @@ class BackendTests(unittest.TestCase):
 
         asyncio.run(run_flow())
 
+    def test_music_can_be_updated_and_deleted(self) -> None:
+        async def run_flow() -> None:
+            registration = await backend.register(
+                make_request(),
+                backend.RegistrationInput(
+                    email="music-crud@example.com",
+                    password="a-long-test-password",
+                    displayName="Music CRUD",
+                ),
+            )
+            cookie = registration.headers["set-cookie"].split(";", 1)[0]
+            track_id = "123e4567-e89b-12d3-a456-426614174000"
+            await backend.upload(
+                make_request(cookie),
+                f"music/{track_id}/Artist -- Album -- Song.mp3",
+                UploadFile(
+                    BytesIO(b"test audio"),
+                    filename="Artist -- Album -- Song.mp3",
+                    headers=Headers({"content-type": "audio/mpeg"}),
+                ),
+            )
+
+            await backend.update_music(
+                make_request(cookie),
+                track_id,
+                backend.MusicUpdateInput(title="New Song", artist="New Artist", album="New Album"),
+            )
+            listing = await backend.list_music(make_request(cookie))
+            self.assertIn(b'"title":"New Song"', listing.body)
+            self.assertIn(b'"artist":"New Artist"', listing.body)
+            self.assertIn(b'"album":"New Album"', listing.body)
+
+            media_path = backend.UPLOAD_DIR / listing.body.decode().split("/media/")[1].split('"')[0]
+            self.assertTrue(media_path.exists())
+            await backend.delete_music(make_request(cookie), track_id)
+            self.assertFalse(media_path.exists())
+            self.assertIn(b'"music":[]', (await backend.list_music(make_request(cookie))).body)
+
+        asyncio.run(run_flow())
+
     def test_write_requests_reject_foreign_origins(self) -> None:
         with self.assertRaises(HTTPException) as error:
             backend.require_same_origin(make_request(origin="https://attacker.example"))
