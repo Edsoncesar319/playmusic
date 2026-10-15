@@ -37,21 +37,18 @@ Um player de música web moderno e responsivo com suporte a upload de músicas, 
 - Gradientes e efeitos visuais
 
 ### Backend
-- Python 3.x
-- Flask (Framework web)
-- Flask-CORS (Cross-Origin Resource Sharing)
-- Werkzeug (Utilitários web)
+- Vercel Functions (Node.js 20+)
+- Vercel Blob (`@vercel/blob`)
 
 ## 📦 Estrutura do Projeto
 
 ```
 musickera/
 ├── index.html          # Interface do usuário
-├── server.py          # Servidor backend
-├── requirements.txt   # Dependências Python
-├── musics/           # Pasta de músicas
-│   ├── *.mp3        # Arquivos de música
-│   └── *.jpeg       # Capas de álbum
+├── api/
+│   ├── music.js       # Lista músicas e capas do Blob
+│   └── upload.js      # Autoriza uploads diretos e limitados
+├── package.json       # Dependências das funções Vercel
 └── README.md         # Documentação
 ```
 
@@ -63,17 +60,26 @@ git clone [URL_DO_REPOSITÓRIO]
 cd musickera
 ```
 
-2. Instale as dependências Python:
+2. Instale as dependências:
 ```bash
-pip install -r requirements.txt
+npm install
 ```
 
-3. Inicie o servidor:
+3. Conecte o armazenamento Blob ao projeto Vercel:
+   - No painel da Vercel, abra **Storage**, selecione o Blob store e conecte-o ao projeto.
+   - Habilite os ambientes que serão usados. A Vercel disponibiliza `BLOB_READ_WRITE_TOKEN` para as funções.
+   - Para desenvolvimento local, use `vercel env pull .env.local` depois de instalar a CLI e vincular o projeto.
+
+   Nunca coloque o token no HTML, no JavaScript do navegador ou no repositório.
+
+4. Inicie o projeto localmente com a CLI da Vercel para que as rotas `/api` funcionem:
 ```bash
-python server.py
+npx vercel dev
 ```
 
-4. Abra o arquivo `index.html` no navegador ou use um servidor local.
+Em produção, publique o projeto na Vercel. Os uploads de áudio (até 100 MB) e de capas (até 10 MB) vão diretamente do navegador ao Blob; as funções mantêm o token no servidor. As faixas são listadas em `/api/music`, e uma capa pode ser enviada para a faixa selecionada. O player continua guardando uma cópia local dos áudios enviados pelo navegador.
+
+As rotas de upload são públicas e limitam os tipos e tamanhos de arquivo; para uma biblioteca privada, adicione autenticação antes de publicar.
 
 ## 💻 Uso
 
@@ -114,12 +120,10 @@ python server.py
 
 ## 📝 Notas de Desenvolvimento
 
-### Backend (server.py)
-- Servidor Flask na porta 5000
-- Suporte a CORS para desenvolvimento
-- Rotas para upload e listagem de músicas
-- Tratamento de erros e logging
-- Configuração de permissões de arquivo
+### Backend (`api/`)
+- Funções serverless da Vercel para listar Blob e autorizar uploads assinados
+- Token Blob mantido somente no ambiente do servidor
+- Áudio e imagens públicos são associados por um identificador aleatório da faixa
 
 ### Frontend (index.html)
 - Interface moderna e responsiva

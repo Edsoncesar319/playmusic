@@ -1244,12 +1244,16 @@
                     <button class="upload-button" onclick="document.getElementById('fileInput').click()">
                         <span>📁</span> Upload
                     </button>
+                    <button class="upload-button" onclick="document.getElementById('coverInput').click()">
+                        <span>🖼️</span> Capa
+                    </button>
                 </div>
                 <input type="file" id="fileInput" accept="audio/*" multiple onchange="handleFileUpload(event)" style="display: none;">
+                <input type="file" id="coverInput" accept="image/jpeg,image/png,image/webp,image/gif" onchange="handleCoverUpload(event)" style="display: none;">
                 <ul class="track-list">
                     <!-- A lista será preenchida dinamicamente pelo JavaScript -->
                 </ul>
-                <button class="clear-playlist" onclick="clearPlaylist()" style="display: none;">Limpar Playlist</button>
+                <button class="clear-playlist" onclick="clearPlaylist()" style="display: none;">Limpar músicas locais</button>
             </div>
         </div>
     </div>
@@ -1610,7 +1614,7 @@
                             `<img src='${track.album_cover}' alt='Capa' style='width:32px;height:32px;border-radius:4px;margin-right:8px;object-fit:cover;vertical-align:middle;'>` : ''}
                         ${track.source === 'deezer' ? 
                             '<button class="add-track" onclick="event.stopPropagation(); addDeezerTrack(' + JSON.stringify(track).replace(/"/g, '&quot;') + ')">+</button>' : 
-                            '<button class="remove-track" onclick="event.stopPropagation(); removeTrack(' + playlist.indexOf(track) + ')">×</button>'}
+                            (track.blobId ? '' : '<button class="remove-track" onclick="event.stopPropagation(); removeTrack(' + playlist.indexOf(track) + ')">×</button>')}
                     </li>
                 `).join('');
 
@@ -1656,12 +1660,12 @@
                         <div class="artist-name-small">${track.artist}</div>
                     </div>
                     <span class="track-duration">${track.duration}</span>
-                    <button class="remove-track" onclick="event.stopPropagation(); removeTrack(${index})">×</button>
+                    ${track.blobId ? '' : `<button class="remove-track" onclick="event.stopPropagation(); removeTrack(${index})">×</button>`}
                 </li>
             `).join('');
             
             // Mostra ou esconde o botão de limpar playlist
-            clearButton.style.display = playlist.length > 0 ? 'block' : 'none';
+            clearButton.style.display = playlist.some(track => !track.blobId) ? 'block' : 'none';
             
             adjustFontSize();
         }
@@ -2021,6 +2025,7 @@
 
                     // Cria o objeto da música
                     const arrayBuffer = await file.arrayBuffer();
+                    const blobId = crypto.randomUUID();
                     const music = {
                         title: title || "Desconhecido",
                         artist: artist || "Desconhecido",
@@ -2030,16 +2035,45 @@
                         file: arrayBuffer,
                         fileType: file.type,
                         fileName: file.name,
+                        blobId: blobId,
                         trackNumber: playlist.length + 1
                     };
+                    const extension = file.name.match(/\.[^.]+$/)?.[0] || '';
+                    const blobFileName = sanitizeBlobFileName(
+                        `${music.artist} -- ${music.album} -- ${music.title}${extension}`
+                    );
+
+                    let remoteMusic;
+                    try {
+                        remoteMusic = await uploadToVercelBlob(file, `music/${blobId}/${blobFileName}`);
+                        music.file = remoteMusic.url;
+                    } catch (error) {
+                        console.error('Falha ao enviar música para o Vercel Blob:', error);
+                        alert(`A música ${file.name} será salva apenas neste navegador porque o upload para o Blob falhou.`);
+                        music.blobId = undefined;
+                        music.file = arrayBuffer;
+                    }
+
+                    if (remoteMusic && cover.startsWith('data:')) {
+                        try {
+                            const coverFile = await (await fetch(cover)).blob();
+                            const extension = getImageExtension(coverFile.type);
+                            const uploadedCover = await uploadToVercelBlob(
+                                new File([coverFile], `cover.${extension}`, { type: coverFile.type }),
+                                `covers/${blobId}/cover.${extension}`
+                            );
+                            music.cover = uploadedCover.url;
+                        } catch (error) {
+                            console.error('Falha ao enviar a capa incorporada para o Vercel Blob:', error);
+                        }
+                    }
 
                     // Salva no banco de dados
-                    const id = await saveMusicToDB(music);
+                    const id = await saveMusicToDB({ ...music, file: arrayBuffer });
                     music.id = id;
 
-                    // Cria URL do blob para reprodução
-                    const blob = new Blob([arrayBuffer], { type: file.type });
-                    music.file = URL.createObjectURL(blob);
+                    // Mantém o áudio disponível localmente mesmo com a cópia remota.
+                    music.file = URL.createObjectURL(new Blob([arrayBuffer], { type: file.type }));
 
                     // Adiciona à playlist
                     playlist.push(music);
@@ -2067,70 +2101,100 @@
             event.target.value = '';
         }
 
-        // Função para atualizar a lista de músicas do diretório
-        async function updateMusicList() {
+        function sanitizeBlobFileName(fileName) {
+            const safeName = fileName
+                .replace(/[\/\\\0-\x1f\x7f]/g, '_')
+                .replace(/[^\p{L}\p{N}._ -]/gu, '_')
+                .replace(/\s+/g, ' ')
+                .trim()
+                .slice(0, 180);
+            return safeName && safeName !== '.' && safeName !== '..' ? safeName : 'media';
+        }
+
+        function getImageExtension(contentType) {
+            const extensions = {
+                'image/gif': 'gif',
+                'image/jpeg': 'jpg',
+                'image/png': 'png',
+                'image/webp': 'webp'
+            };
+            const extension = extensions[contentType];
+            if (!extension) {
+                throw new Error('Formato de imagem não permitido.');
+            }
+            return extension;
+        }
+
+        async function uploadToVercelBlob(file, pathname) {
+            const { upload } = await import('https://esm.sh/@vercel/blob@2.8.2/client');
+            return upload(pathname, file, {
+                access: 'public',
+                handleUploadUrl: '/api/upload'
+            });
+        }
+
+        async function handleCoverUpload(event) {
+            const file = event.target.files[0];
+            event.target.value = '';
+            if (!file) return;
+
+            const track = playlist[currentTrack];
+            if (!track || !track.blobId) {
+                alert('Selecione uma música já enviada ao Blob antes de adicionar uma capa.');
+                return;
+            }
+
             try {
-                console.log('Atualizando lista de músicas...');
-                const response = await fetch('http://localhost:5000/list_music');
-                console.log('Resposta do servidor:', response.status);
-                
-                const data = await response.json();
-                console.log('Dados recebidos:', data);
-                
-                if (data.error) {
-                    throw new Error(data.error);
-                }
-
-                // Verifica se há novas músicas
-                const currentFiles = playlist.map(track => track.file);
-                const newMusic = data.music.filter(music => 
-                    !currentFiles.includes(`http://localhost:5000${music.path}`)
+                const extension = getImageExtension(file.type);
+                const uploadedCover = await uploadToVercelBlob(
+                    file,
+                    `covers/${track.blobId}/${sanitizeBlobFileName(file.name || `cover.${extension}`)}`
                 );
-
-                if (newMusic.length > 0) {
-                    console.log('Novas músicas encontradas:', newMusic);
-                    // Adiciona apenas as novas músicas
-                    newMusic.forEach(music => {
-                        const fileName = music.name.replace(/\.[^/.]+$/, "");
-                        // Tenta extrair informações do nome do arquivo
-                        let artist = "Artista Desconhecido";
-                        let album = "Álbum Desconhecido";
-                        let title = fileName;
-
-                        // Se o nome do arquivo contiver " - ", assume que é "Artista - Título"
-                        if (fileName.includes(" - ")) {
-                            const parts = fileName.split(" - ");
-                            if (parts.length >= 2) {
-                                artist = parts[0].trim();
-                                title = parts[1].trim();
-                            }
-                        }
-
-                        playlist.push({
-                            title: title,
-                            artist: artist,
-                            album: album,
-                            duration: "0:00",
-                            cover: "musics/default-cover.jpg",
-                            file: `http://localhost:5000${music.path}`,
-                            trackNumber: playlist.length + 1
-                        });
-                    });
-
-                    sortPlaylist();
-                    updatePlaylistHTML();
-                    updateDurations();
-                }
+                track.cover = uploadedCover.url;
+                updatePlayerInfo(track);
+                updatePlaylistHTML();
             } catch (error) {
-                console.error('Erro ao atualizar lista de músicas:', error);
-                if (error.message.includes('Failed to fetch')) {
-                    console.error('Não foi possível conectar ao servidor. Verifique se o servidor está rodando.');
-                }
+                console.error('Erro ao enviar a capa para o Vercel Blob:', error);
+                alert('Não foi possível enviar a capa. Verifique o formato, o tamanho e a configuração do Blob.');
             }
         }
 
-        // Atualiza a lista de músicas a cada 5 segundos
-        setInterval(updateMusicList, 5000);
+        // Função para atualizar a lista de músicas do diretório
+        async function updateMusicList() {
+            try {
+                const response = await fetch('/api/music');
+                if (!response.ok) {
+                    throw new Error(`A API do Blob respondeu com status ${response.status}.`);
+                }
+
+                const data = await response.json();
+                for (const music of data.music) {
+                    const existingIndex = playlist.findIndex(track => track.blobId === music.blobId);
+                    if (existingIndex >= 0) {
+                        const existingTrack = playlist[existingIndex];
+                        playlist[existingIndex] = {
+                            ...music,
+                            ...existingTrack,
+                            file: existingTrack.file,
+                            cover: music.cover || existingTrack.cover,
+                            blobId: music.blobId
+                        };
+                        continue;
+                    }
+
+                    music.cover = music.cover || 'musics/default-cover.jpg';
+                    playlist.push(music);
+                }
+
+                sortPlaylist();
+                updateDurations();
+            } catch (error) {
+                console.error('Erro ao atualizar a biblioteca do Vercel Blob:', error);
+            }
+        }
+
+        // Atualiza a biblioteca remota periodicamente.
+        setInterval(updateMusicList, 30000);
 
         // Função para tocar uma música específica
         function playTrack(index) {
@@ -2142,7 +2206,6 @@
         }
 
         // Inicializa o player
-        updateMusicList();
         updatePlaylistHTML();
 
         function toggleRepeat() {
@@ -2197,6 +2260,11 @@
 
         // Função para remover uma música da playlist
         async function removeTrack(index) {
+            if (playlist[index]?.blobId) {
+                alert('As músicas do Blob não podem ser removidas pelo player. Gerencie esses arquivos no painel da Vercel.');
+                return;
+            }
+
             if (index === currentTrack) {
                 // Se estiver removendo a música atual, para a reprodução
                 audio.pause();
@@ -2236,25 +2304,31 @@
 
         // Função para limpar toda a playlist
         async function clearPlaylist() {
-            if (confirm("Tem certeza que deseja limpar toda a playlist?")) {
+            if (confirm("Limpar as músicas locais deste navegador? As músicas do Blob continuarão disponíveis.")) {
                 try {
                     await clearMusicDB();
                     
                     audio.pause();
                     isPlaying = false;
-                    
+
+                    const blobTracks = playlist.filter(track => track.blobId);
                     playlist.length = 0;
+                    playlist.push(...blobTracks);
                     currentTrack = 0;
                     
                     updatePlaylistHTML();
-                    
-                    document.querySelector('.track-title').textContent = "Nenhuma música";
-                    document.querySelector('.artist-name').textContent = "";
-                    document.querySelector('.album-name').textContent = "";
-                    document.querySelector('.album-cover').src = "musics/default-cover.jpg";
-                    document.querySelector('.progress-bar').style.width = "0%";
-                    document.querySelector('.current-time').textContent = "0:00";
-                    document.querySelector('.duration').textContent = "0:00";
+
+                    if (playlist.length > 0) {
+                        loadTrack();
+                    } else {
+                        document.querySelector('.track-title').textContent = "Nenhuma música";
+                        document.querySelector('.artist-name').textContent = "";
+                        document.querySelector('.album-name').textContent = "";
+                        document.querySelector('.album-cover').src = "musics/default-cover.jpg";
+                        document.querySelector('.progress-bar').style.width = "0%";
+                        document.querySelector('.current-time').textContent = "0:00";
+                        document.querySelector('.duration').textContent = "0:00";
+                    }
                 } catch (error) {
                     console.error('Erro ao limpar banco de dados:', error);
                     alert('Erro ao limpar a playlist');
@@ -2276,6 +2350,7 @@
                 }
                 
                 updatePlaylistHTML();
+                await updateMusicList();
                 if (playlist.length > 0) {
                     currentTrack = 0;
                     loadTrack();
@@ -2285,7 +2360,7 @@
             }
         }
 
-        // Inicializa o banco de dados e carrega a playlist
+        // Inicializa o banco de dados e carrega a playlist local e remota.
         initDB().then(() => {
             loadPlaylistFromDB();
         }).catch(error => {
