@@ -2404,7 +2404,7 @@
 
                     let remoteMusic;
                     try {
-                        remoteMusic = await uploadToVercelBlob(file, `music/${blobId}/${blobFileName}`);
+                        remoteMusic = await uploadToBackend(file, `music/${blobId}/${blobFileName}`);
                         music.file = remoteMusic.url;
                     } catch (error) {
                         console.error('Falha ao enviar música para o Vercel Blob:', error);
@@ -2417,7 +2417,7 @@
                         try {
                             const coverFile = await (await fetch(cover)).blob();
                             const extension = getImageExtension(coverFile.type);
-                            const uploadedCover = await uploadToVercelBlob(
+                            const uploadedCover = await uploadToBackend(
                                 new File([coverFile], `cover.${extension}`, { type: coverFile.type }),
                                 `covers/${blobId}/cover.${extension}`
                             );
@@ -2484,12 +2484,20 @@
             return extension;
         }
 
-        async function uploadToVercelBlob(file, pathname) {
-            const { upload } = await import('https://esm.sh/@vercel/blob@2.8.2/client');
-            return upload(pathname, file, {
-                access: 'public',
-                handleUploadUrl: '/api/upload'
+        async function uploadToBackend(file, pathname) {
+            const formData = new FormData();
+            formData.append('pathname', pathname);
+            formData.append('file', file);
+            const response = await fetch('/api/upload', {
+                method: 'POST',
+                credentials: 'same-origin',
+                body: formData
             });
+            const result = await response.json();
+            if (!response.ok) {
+                throw new Error(result.error || 'Não foi possível enviar o arquivo.');
+            }
+            return result;
         }
 
         async function handleCoverUpload(event) {
@@ -2505,7 +2513,7 @@
 
             try {
                 const extension = getImageExtension(file.type);
-                const uploadedCover = await uploadToVercelBlob(
+                const uploadedCover = await uploadToBackend(
                     file,
                     `covers/${track.blobId}/${sanitizeBlobFileName(file.name || `cover.${extension}`)}`
                 );
@@ -2528,7 +2536,7 @@
                     return;
                 }
                 if (!response.ok) {
-                    throw new Error(`A API do Blob respondeu com status ${response.status}.`);
+                    throw new Error(`A API respondeu com status ${response.status}.`);
                 }
 
                 const data = await response.json();
@@ -2553,7 +2561,7 @@
                 sortPlaylist();
                 updateDurations();
             } catch (error) {
-                console.error('Erro ao atualizar a biblioteca do Vercel Blob:', error);
+                console.error('Erro ao atualizar a biblioteca remota:', error);
             }
         }
 

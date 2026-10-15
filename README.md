@@ -44,8 +44,8 @@ Um player de música web moderno e responsivo com suporte a upload de músicas, 
 - Gradientes e efeitos visuais
 
 ### Backend
-- Vercel Functions (Node.js 24.x)
-- Vercel Blob (`@vercel/blob`)
+- FastAPI (Python), SQLite e armazenamento local para execução integrada
+- Vercel Functions (Node.js 24.x) e Vercel Blob para a implantação Vercel existente
 
 ## 📦 Estrutura do Projeto
 
@@ -56,6 +56,8 @@ musickera/
 │   ├── music.js       # Lista músicas e capas do Blob
 │   ├── upload.js      # Autoriza uploads diretos e limitados
 │   └── auth/          # Cadastro, login, sessão e gestão da própria conta
+├── backend/
+│   └── app.py         # API FastAPI compatível com a interface e execução local
 ├── database/
 │   └── schema.sql     # Tabelas de usuários e sessões do Neon
 ├── lib/               # Acesso ao Neon e utilitários de autenticação
@@ -63,7 +65,7 @@ musickera/
 └── README.md         # Documentação
 ```
 
-## 🔧 Instalação
+## 🔧 Instalação e execução
 
 1. Clone o repositório:
 ```bash
@@ -71,32 +73,49 @@ git clone [URL_DO_REPOSITÓRIO]
 cd musickera
 ```
 
-2. Instale as dependências:
+2. Para executar localmente com o backend Python, instale as dependências:
+```bash
+py -m pip install -r requirements.txt
+```
+
+3. Inicie o backend, que também serve a interface:
+```bash
+py -m uvicorn backend.app:app --reload
+```
+Abra http://127.0.0.1:8000. Para verificar se a API está ativa, acesse http://127.0.0.1:8000/api/health. Se o comando `py` não estiver disponível, use `python` no lugar dele.
+
+O backend Python implementa as rotas `/api/auth/*`, `/api/music` e `/api/upload`, com sessões autenticadas e limites de 100 MB para áudio e 10 MB para capas. O banco SQLite e os arquivos enviados ficam em `data/`; defina `MUSICKERA_DATA_DIR` para escolher outro diretório. As faixas são servidas pelo próprio backend em `/media/`. Esses dados locais não são sincronizados com a implantação Vercel.
+
+Execute os testes do backend com:
+```bash
+py -m unittest backend.test_app
+```
+
+### Implantação existente com Node.js e Vercel
+
+Para executar ou publicar o backend Node.js existente, instale as dependências:
 ```bash
 npm install
 ```
 
-3. Crie um banco PostgreSQL no Neon e execute [`database/schema.sql`](./database/schema.sql) no SQL Editor do Neon.
+Crie um banco PostgreSQL no Neon e execute [`database/schema.sql`](./database/schema.sql) no SQL Editor do Neon. Configure no painel da Vercel:
 
-4. Configure as variáveis de ambiente no painel da Vercel (Development, Preview e Production, conforme necessário):
-   - `DATABASE_URL`: connection string do Neon, de preferência a pooled connection string.
-   - `BLOB_READ_WRITE_TOKEN`: token do armazenamento Vercel Blob.
+- `DATABASE_URL`: connection string do Neon, de preferência a pooled connection string.
+- `BLOB_READ_WRITE_TOKEN`: token do armazenamento Vercel Blob.
 
-   Para desenvolvimento local, defina essas variáveis no `.env.local` ou use `vercel env pull .env.local`. Nunca coloque credenciais no HTML, no JavaScript do navegador ou no repositório.
+Para desenvolvimento local, defina essas variáveis no `.env.local` ou use `vercel env pull .env.local`. Nunca coloque credenciais no HTML, no JavaScript do navegador ou no repositório.
 
-5. Conecte o armazenamento Blob ao projeto Vercel:
-   - No painel da Vercel, abra **Storage**, selecione o Blob store e conecte-o ao projeto.
-   - Habilite os ambientes que serão usados. A Vercel disponibiliza `BLOB_READ_WRITE_TOKEN` para as funções.
+Conecte o armazenamento Blob ao projeto Vercel em **Storage** e habilite os ambientes necessários.
 
-6. Inicie o projeto localmente com a CLI da Vercel para que as rotas `/api` funcionem:
+Para executar localmente com Neon e Blob, inicie pela CLI:
 ```bash
 npx vercel dev
 ```
-Abra o endereço local exibido pela CLI. Não abra `index.html` diretamente nem use um servidor estático, como o Live Server do VS Code: eles não executam as funções da API necessárias para cadastro, login e biblioteca. O script `setup.bat` também inicia o servidor da Vercel.
+Abra o endereço local exibido pela CLI. O script `setup.bat` também inicia o servidor da Vercel.
 
 Em produção, publique o projeto na Vercel. Cada conta pode consultar e enviar arquivos para a biblioteca compartilhada; os endpoints de listagem e upload exigem uma sessão válida. Os uploads de áudio (até 100 MB) e de capas (até 10 MB) vão diretamente do navegador ao Blob; as funções mantêm o token no servidor. O player também mantém uma cópia local dos áudios no navegador, separada por conta.
 
-O Vercel Blob deste projeto usa arquivos públicos. A autenticação protege a listagem e a autorização de novos uploads, mas um URL público de arquivo já compartilhado pode ser aberto por qualquer pessoa que o possua.
+O Vercel Blob deste projeto usa arquivos públicos. A autenticação protege a listagem e a autorização de novos uploads, mas um URL público de arquivo já compartilhado pode ser aberto por qualquer pessoa que o possua. O backend Python local serve os arquivos pelo próprio servidor e não os envia ao Blob.
 
 Os cookies de sessão são `HttpOnly`, `Secure` e `SameSite=Lax`; as senhas são armazenadas com scrypt. Para produção, configure também limitação de tentativas de login no firewall/WAF da Vercel.
 
