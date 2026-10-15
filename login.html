@@ -33,6 +33,24 @@
             border-radius: 20px;
             background: #181818;
             box-shadow: 0 16px 48px rgba(0, 0, 0, 0.32);
+            animation: authPanelEnter 0.55s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+        }
+
+        @keyframes authPanelEnter {
+            from {
+                opacity: 0;
+                transform: translateY(12px) scale(0.98);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .auth-panel {
+                animation: none;
+            }
         }
 
         h1 {
