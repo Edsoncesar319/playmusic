@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import json
 import os
 import tempfile
 import unittest
@@ -140,7 +141,7 @@ class BackendTests(unittest.TestCase):
             self.assertIn(b'"artist":"New Artist"', listing.body)
             self.assertIn(b'"album":"New Album"', listing.body)
 
-            media_path = backend.UPLOAD_DIR / listing.body.decode().split("/media/")[1].split('"')[0]
+            media_path = backend.UPLOAD_DIR / json.loads(listing.body)["music"][0]["file"].rsplit("/", 1)[1]
             self.assertTrue(media_path.exists())
             await backend.delete_music(make_request(cookie), track_id)
             self.assertFalse(media_path.exists())
