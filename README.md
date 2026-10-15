@@ -44,7 +44,7 @@ Um player de música web moderno e responsivo com suporte a upload de músicas, 
 - Gradientes e efeitos visuais
 
 ### Backend
-- Vercel Functions (Node.js 20+)
+- Vercel Functions (Node.js 24.x)
 - Vercel Blob (`@vercel/blob`)
 
 ## 📦 Estrutura do Projeto
@@ -92,6 +92,7 @@ npm install
 ```bash
 npx vercel dev
 ```
+Abra o endereço local exibido pela CLI. Não abra `index.html` diretamente nem use um servidor estático, como o Live Server do VS Code: eles não executam as funções da API necessárias para cadastro, login e biblioteca. O script `setup.bat` também inicia o servidor da Vercel.
 
 Em produção, publique o projeto na Vercel. Cada conta pode consultar e enviar arquivos para a biblioteca compartilhada; os endpoints de listagem e upload exigem uma sessão válida. Os uploads de áudio (até 100 MB) e de capas (até 10 MB) vão diretamente do navegador ao Blob; as funções mantêm o token no servidor. O player também mantém uma cópia local dos áudios no navegador, separada por conta.
 
