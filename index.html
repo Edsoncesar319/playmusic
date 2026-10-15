@@ -1196,110 +1196,9 @@
             justify-content: center;
         }
 
-        .auth-panel {
-            width: min(520px, calc(100% - 32px));
-            margin: 28px auto;
-            padding: 28px;
-            border: 1px solid rgba(255, 255, 255, 0.12);
-            border-radius: 20px;
-            background: rgba(18, 18, 18, 0.92);
-            box-shadow: 0 16px 48px rgba(0, 0, 0, 0.32);
-        }
-
-        .auth-panel h2 {
-            margin-bottom: 8px;
-            font-size: 24px;
-        }
-
-        .auth-description {
-            margin-bottom: 20px;
-            color: rgba(255, 255, 255, 0.65);
-            line-height: 1.5;
-        }
-
-        .auth-form {
-            display: grid;
-            gap: 14px;
-        }
-
-        .auth-form label {
-            display: grid;
-            gap: 6px;
-            color: rgba(255, 255, 255, 0.8);
-            font-size: 14px;
-        }
-
-        .auth-form input {
-            width: 100%;
-            min-height: 44px;
-            padding: 10px 12px;
-            border: 1px solid rgba(255, 255, 255, 0.16);
-            border-radius: 10px;
-            outline: none;
-            background: rgba(255, 255, 255, 0.07);
-            color: #fff;
-        }
-
-        .auth-form input:focus {
-            border-color: #1DB954;
-            box-shadow: 0 0 0 2px rgba(29, 185, 84, 0.18);
-        }
-
-        .auth-actions {
-            display: flex;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 12px;
-            margin-top: 4px;
-        }
-
-        .auth-button {
-            min-height: 42px;
-            padding: 9px 16px;
-            border: 0;
-            border-radius: 999px;
-            background: #1DB954;
-            color: #07190d;
-            font-weight: 700;
-            cursor: pointer;
-        }
-
-        .auth-button.secondary {
-            border: 1px solid rgba(255, 255, 255, 0.18);
-            background: transparent;
-            color: #fff;
-        }
-
-        .auth-button.danger {
-            background: #b3261e;
-            color: #fff;
-        }
-
-        .auth-message {
-            min-height: 1.4em;
-            margin-top: 12px;
-            color: #ffb4ab;
-        }
-
-        .auth-message.success {
-            color: #86efac;
-        }
-
-        .auth-account-heading {
-            margin-bottom: 18px;
-            color: #1ed760;
-        }
-
         .player-section[hidden],
-        .auth-panel[hidden],
-        .auth-view[hidden] {
+        .auth-panel[hidden] {
             display: none !important;
-        }
-
-        @media (max-width: 480px) {
-            .auth-panel {
-                padding: 20px;
-            }
         }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/jsmediatags@3.9.7/dist/jsmediatags.min.js"></script>
@@ -1325,30 +1224,6 @@
                 </div>
             </div>
         </div>
-
-        <section class="auth-panel" id="authPanel" aria-live="polite" hidden>
-            <h2 class="auth-account-heading" id="accountHeading">Minha conta</h2>
-            <form class="auth-form" id="profileForm">
-                <label>Nome
-                    <input type="text" name="displayName" autocomplete="name" maxlength="80" required>
-                </label>
-                <label>E-mail
-                    <input type="email" name="email" autocomplete="email" maxlength="254" required>
-                </label>
-                <label>Senha atual (necessária para trocar e-mail ou senha)
-                    <input type="password" name="currentPassword" autocomplete="current-password">
-                </label>
-                <label>Nova senha (opcional)
-                    <input type="password" name="newPassword" autocomplete="new-password" minlength="12" maxlength="128">
-                </label>
-                <div class="auth-actions">
-                    <button class="auth-button" type="submit"><span class="material-symbols-rounded" aria-hidden="true">save</span> Salvar alterações</button>
-                    <button class="auth-button secondary" type="button" id="logoutButton"><span class="material-symbols-rounded" aria-hidden="true">logout</span> Sair</button>
-                    <button class="auth-button danger" type="button" id="deleteAccountButton"><span class="material-symbols-rounded" aria-hidden="true">delete</span> Excluir conta</button>
-                </div>
-            </form>
-            <p class="auth-message" id="authMessage" role="status"></p>
-        </section>
 
         <div class="player-section" id="playerSection" hidden>
             <div class="player-container">
@@ -1457,51 +1332,14 @@
             });
         }
 
-        function setAuthMessage(message, isSuccess = false) {
-            const authMessage = document.getElementById('authMessage');
-            authMessage.textContent = message;
-            authMessage.classList.toggle('success', isSuccess);
-        }
-
         function redirectToLogin(message = '') {
             const loginUrl = new URL('/login.html', window.location.origin);
             if (message) loginUrl.searchParams.set('message', message);
             window.location.replace(loginUrl);
         }
 
-        async function sendAuthRequest(url, method, payload) {
-            const options = {
-                method,
-                headers: { 'Content-Type': 'application/json' },
-                credentials: 'same-origin'
-            };
-            if (payload !== undefined) options.body = JSON.stringify(payload);
-
-            const response = await fetch(url, options);
-            let result = {};
-            try {
-                result = await response.json();
-            } catch {
-                result = {};
-            }
-
-            if (!response.ok) {
-                const error = new Error(result.error || 'Não foi possível concluir a solicitação.');
-                error.status = response.status;
-                throw error;
-            }
-            return result;
-        }
-
         async function activateUser(user) {
             currentUser = user;
-            document.getElementById('accountHeading').textContent = `Olá, ${user.displayName}`;
-            const profileForm = document.getElementById('profileForm');
-            profileForm.elements.displayName.value = user.displayName;
-            profileForm.elements.email.value = user.email;
-            profileForm.elements.currentPassword.value = '';
-            profileForm.elements.newPassword.value = '';
-            document.getElementById('authPanel').hidden = false;
             document.getElementById('playerSection').hidden = false;
 
             try {
@@ -1509,7 +1347,7 @@
                 await loadPlaylistFromDB();
             } catch (error) {
                 console.error('Falha ao carregar a biblioteca local:', error);
-                setAuthMessage('Não foi possível abrir a biblioteca local neste navegador.');
+                alert('Não foi possível abrir a biblioteca local neste navegador.');
             }
         }
 
@@ -1549,48 +1387,6 @@
                 redirectToLogin('Não foi possível verificar sua sessão. Confira a conexão com o servidor.');
             }
         }
-
-        document.getElementById('profileForm').addEventListener('submit', async (event) => {
-            event.preventDefault();
-            const form = event.currentTarget;
-            const { displayName, email, currentPassword, newPassword } = Object.fromEntries(new FormData(form));
-            try {
-                const { user } = await sendAuthRequest('/api/auth/me', 'PATCH', {
-                    displayName,
-                    email,
-                    currentPassword,
-                    newPassword
-                });
-                currentUser = user;
-                document.getElementById('accountHeading').textContent = `Olá, ${user.displayName}`;
-                form.elements.currentPassword.value = '';
-                form.elements.newPassword.value = '';
-                setAuthMessage('Dados da conta atualizados.', true);
-            } catch (error) {
-                if (error.status === 401) clearUserState('Sua sessão expirou. Entre novamente.');
-                else setAuthMessage(error.message);
-            }
-        });
-
-        document.getElementById('logoutButton').addEventListener('click', async () => {
-            try {
-                await sendAuthRequest('/api/auth/logout', 'POST');
-                clearUserState();
-            } catch (error) {
-                setAuthMessage(error.message);
-            }
-        });
-
-        document.getElementById('deleteAccountButton').addEventListener('click', async () => {
-            if (!confirm('Excluir sua conta permanentemente? Essa ação não pode ser desfeita.')) return;
-            try {
-                await sendAuthRequest('/api/auth/me', 'DELETE');
-                clearUserState('Conta excluída.');
-            } catch (error) {
-                if (error.status === 401) clearUserState('Sua sessão expirou. Entre novamente.');
-                else setAuthMessage(error.message);
-            }
-        });
 
         // Função para salvar uma música no banco de dados
         async function saveMusicToDB(music) {
