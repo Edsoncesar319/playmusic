@@ -333,6 +333,12 @@ async def home() -> FileResponse:
     return FileResponse(ROOT_DIR / "index.html")
 
 
+@app.get("/login", include_in_schema=False)
+@app.get("/login.html", include_in_schema=False)
+async def login_page() -> FileResponse:
+    return FileResponse(ROOT_DIR / "login.html")
+
+
 @app.get("/favicon.ico", include_in_schema=False)
 async def favicon() -> FileResponse:
     return FileResponse(ROOT_DIR / "favicon.ico")

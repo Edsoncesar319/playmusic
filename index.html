@@ -1326,64 +1326,27 @@
             </div>
         </div>
 
-        <section class="auth-panel" id="authPanel" aria-live="polite">
-            <div class="auth-view" id="loginView">
-                <h2>Entrar na Musickera</h2>
-                <p class="auth-description">Entre para acessar a biblioteca compartilhada e enviar músicas.</p>
-                <form class="auth-form" id="loginForm">
-                    <label>E-mail
-                        <input type="email" name="email" autocomplete="email" maxlength="254" required>
-                    </label>
-                    <label>Senha
-                        <input type="password" name="password" autocomplete="current-password" required>
-                    </label>
-                    <div class="auth-actions">
-                        <button class="auth-button" type="submit"><span class="material-symbols-rounded" aria-hidden="true">login</span> Entrar</button>
-                        <button class="auth-button secondary" type="button" id="showRegister">Criar conta</button>
-                    </div>
-                </form>
-            </div>
-            <div class="auth-view" id="registerView" hidden>
-                <h2>Criar conta</h2>
-                <p class="auth-description">A senha deve ter pelo menos 12 caracteres.</p>
-                <form class="auth-form" id="registerForm">
-                    <label>Nome
-                        <input type="text" name="displayName" autocomplete="name" maxlength="80" required>
-                    </label>
-                    <label>E-mail
-                        <input type="email" name="email" autocomplete="email" maxlength="254" required>
-                    </label>
-                    <label>Senha
-                        <input type="password" name="password" autocomplete="new-password" minlength="12" maxlength="128" required>
-                    </label>
-                    <div class="auth-actions">
-                        <button class="auth-button" type="submit"><span class="material-symbols-rounded" aria-hidden="true">person_add</span> Criar conta</button>
-                        <button class="auth-button secondary" type="button" id="showLogin">Já tenho conta</button>
-                    </div>
-                </form>
-            </div>
-            <div class="auth-view" id="profileView" hidden>
-                <h2 class="auth-account-heading" id="accountHeading">Minha conta</h2>
-                <form class="auth-form" id="profileForm">
-                    <label>Nome
-                        <input type="text" name="displayName" autocomplete="name" maxlength="80" required>
-                    </label>
-                    <label>E-mail
-                        <input type="email" name="email" autocomplete="email" maxlength="254" required>
-                    </label>
-                    <label>Senha atual (necessária para trocar e-mail ou senha)
-                        <input type="password" name="currentPassword" autocomplete="current-password">
-                    </label>
-                    <label>Nova senha (opcional)
-                        <input type="password" name="newPassword" autocomplete="new-password" minlength="12" maxlength="128">
-                    </label>
-                    <div class="auth-actions">
-                        <button class="auth-button" type="submit"><span class="material-symbols-rounded" aria-hidden="true">save</span> Salvar alterações</button>
-                        <button class="auth-button secondary" type="button" id="logoutButton"><span class="material-symbols-rounded" aria-hidden="true">logout</span> Sair</button>
-                        <button class="auth-button danger" type="button" id="deleteAccountButton"><span class="material-symbols-rounded" aria-hidden="true">delete</span> Excluir conta</button>
-                    </div>
-                </form>
-            </div>
+        <section class="auth-panel" id="authPanel" aria-live="polite" hidden>
+            <h2 class="auth-account-heading" id="accountHeading">Minha conta</h2>
+            <form class="auth-form" id="profileForm">
+                <label>Nome
+                    <input type="text" name="displayName" autocomplete="name" maxlength="80" required>
+                </label>
+                <label>E-mail
+                    <input type="email" name="email" autocomplete="email" maxlength="254" required>
+                </label>
+                <label>Senha atual (necessária para trocar e-mail ou senha)
+                    <input type="password" name="currentPassword" autocomplete="current-password">
+                </label>
+                <label>Nova senha (opcional)
+                    <input type="password" name="newPassword" autocomplete="new-password" minlength="12" maxlength="128">
+                </label>
+                <div class="auth-actions">
+                    <button class="auth-button" type="submit"><span class="material-symbols-rounded" aria-hidden="true">save</span> Salvar alterações</button>
+                    <button class="auth-button secondary" type="button" id="logoutButton"><span class="material-symbols-rounded" aria-hidden="true">logout</span> Sair</button>
+                    <button class="auth-button danger" type="button" id="deleteAccountButton"><span class="material-symbols-rounded" aria-hidden="true">delete</span> Excluir conta</button>
+                </div>
+            </form>
             <p class="auth-message" id="authMessage" role="status"></p>
         </section>
 
@@ -1494,18 +1457,16 @@
             });
         }
 
-        function showAuthView(viewName) {
-            for (const name of ['login', 'register', 'profile']) {
-                document.getElementById(`${name}View`).hidden = name !== viewName;
-            }
-            document.getElementById('authMessage').textContent = '';
-            document.getElementById('authMessage').classList.remove('success');
-        }
-
         function setAuthMessage(message, isSuccess = false) {
             const authMessage = document.getElementById('authMessage');
             authMessage.textContent = message;
             authMessage.classList.toggle('success', isSuccess);
+        }
+
+        function redirectToLogin(message = '') {
+            const loginUrl = new URL('/login.html', window.location.origin);
+            if (message) loginUrl.searchParams.set('message', message);
+            window.location.replace(loginUrl);
         }
 
         async function sendAuthRequest(url, method, payload) {
@@ -1540,7 +1501,7 @@
             profileForm.elements.email.value = user.email;
             profileForm.elements.currentPassword.value = '';
             profileForm.elements.newPassword.value = '';
-            showAuthView('profile');
+            document.getElementById('authPanel').hidden = false;
             document.getElementById('playerSection').hidden = false;
 
             try {
@@ -1568,16 +1529,14 @@
             playlist.length = 0;
             currentTrack = 0;
             updatePlaylistHTML();
-            document.getElementById('playerSection').hidden = true;
-            showAuthView('login');
-            if (message) setAuthMessage(message);
+            redirectToLogin(message);
         }
 
         async function initializeAuthentication() {
             try {
                 const response = await fetch('/api/auth/me', { credentials: 'same-origin' });
                 if (response.status === 401) {
-                    showAuthView('login');
+                    redirectToLogin();
                     return;
                 }
                 if (!response.ok) {
@@ -1587,39 +1546,9 @@
                 await activateUser(user);
             } catch (error) {
                 console.error('Falha ao verificar a sessão:', error);
-                showAuthView('login');
-                setAuthMessage('Não foi possível conectar à autenticação. Verifique a configuração do servidor.');
+                redirectToLogin('Não foi possível verificar sua sessão. Confira a conexão com o servidor.');
             }
         }
-
-        document.getElementById('showRegister').addEventListener('click', () => showAuthView('register'));
-        document.getElementById('showLogin').addEventListener('click', () => showAuthView('login'));
-
-        document.getElementById('loginForm').addEventListener('submit', async (event) => {
-            event.preventDefault();
-            const form = event.currentTarget;
-            const payload = Object.fromEntries(new FormData(form));
-            try {
-                const { user } = await sendAuthRequest('/api/auth/login', 'POST', payload);
-                form.reset();
-                await activateUser(user);
-            } catch (error) {
-                setAuthMessage(error.message);
-            }
-        });
-
-        document.getElementById('registerForm').addEventListener('submit', async (event) => {
-            event.preventDefault();
-            const form = event.currentTarget;
-            const payload = Object.fromEntries(new FormData(form));
-            try {
-                const { user } = await sendAuthRequest('/api/auth/register', 'POST', payload);
-                form.reset();
-                await activateUser(user);
-            } catch (error) {
-                setAuthMessage(error.message);
-            }
-        });
 
         document.getElementById('profileForm').addEventListener('submit', async (event) => {
             event.preventDefault();
@@ -1868,8 +1797,9 @@
 
         function highlightText(text, searchTerm) {
             if (!searchTerm) return text;
-            const regex = new RegExp(`(${searchTerm})`, 'gi');
-            return text.replace(regex, '<span class="highlight">$1</span>');
+            const escapedTerm = searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            const regex = new RegExp(`(${escapedTerm})`, 'gi');
+            return escapeHTML(text).replace(regex, '<span class="highlight">$1</span>');
         }
 
         function adjustFontSize() {
@@ -2567,6 +2497,7 @@
         async function editTrack(index) {
             const track = playlist[index];
             if (!track) return;
+            const selectedTrack = playlist[currentTrack];
             const title = prompt('Título da música:', track.title);
             if (title === null) return;
             const artist = prompt('Artista:', track.artist);
@@ -2590,6 +2521,8 @@
                 if (track.id) await updateMusicInDB(updatedTrack);
                 Object.assign(track, updatedTrack);
                 sortPlaylist();
+                currentTrack = playlist.indexOf(selectedTrack);
+                updatePlaylistHTML();
             } catch (error) {
                 if (error.status === 401) clearUserState('Sua sessão expirou. Entre novamente.');
                 else alert(`Não foi possível atualizar a música: ${error.message}`);
