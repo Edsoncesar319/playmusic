@@ -1448,6 +1448,7 @@
         let audio = new Audio();
         let repeatMode = 'none'; // 'none', 'one', 'all'
         let currentUser = null;
+        let storageProviderPromise = null;
 
         // Configuração do IndexedDB
         const dbName = 'MusickeraDB';
@@ -2409,7 +2410,37 @@
             return extension;
         }
 
+        async function getStorageProvider() {
+            if (!storageProviderPromise) {
+                storageProviderPromise = fetch('/api/health')
+                    .then(async response => {
+                        if (!response.ok) {
+                            throw new Error(`A API respondeu com status ${response.status}.`);
+                        }
+                        const { storage } = await response.json();
+                        if (storage !== 'local' && storage !== 'vercel') {
+                            throw new Error('O servidor não informou o tipo de armazenamento configurado.');
+                        }
+                        return storage;
+                    })
+                    .catch(error => {
+                        storageProviderPromise = null;
+                        throw error;
+                    });
+            }
+            return storageProviderPromise;
+        }
+
         async function uploadToBackend(file, pathname) {
+            if (await getStorageProvider() === 'vercel') {
+                const { upload } = await import('/blob-client.js');
+                return upload(pathname, file, {
+                    handleUploadUrl: '/api/upload',
+                    access: 'public',
+                    multipart: file.size > 5 * 1024 * 1024
+                });
+            }
+
             const formData = new FormData();
             formData.append('pathname', pathname);
             formData.append('file', file);

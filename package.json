@@ -6,6 +6,7 @@
     "node": "24.x"
   },
   "scripts": {
+    "build": "esbuild lib/blob-client.js --bundle --platform=browser --format=esm --minify --outfile=blob-client.js",
     "test": "node --test"
   },
   "dependencies": {

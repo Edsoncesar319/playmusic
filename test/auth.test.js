@@ -7,7 +7,7 @@ import {
     normalizeEmail,
     verifyPassword,
 } from '../lib/auth.js';
-import { isSameOrigin, readJsonBody } from '../lib/http.js';
+import { isSameOrigin, readJsonBody, sendServerError } from '../lib/http.js';
 
 test('normalizes and validates account emails', () => {
     assert.equal(normalizeEmail('  Person@Example.com '), 'person@example.com');
@@ -45,4 +45,31 @@ test('accepts only same-origin write requests and plain JSON objects', () => {
     assert.deepEqual(readJsonBody({ body: '{"name":"Ana"}' }), { name: 'Ana' });
     assert.equal(readJsonBody({ body: '[]' }), null);
     assert.equal(readJsonBody({ body: 'invalid' }), null);
+});
+
+test('reports missing database configuration as a service-unavailable response', () => {
+    const response = {
+        headers: {},
+        statusCode: 200,
+        body: null,
+        setHeader(name, value) {
+            this.headers[name] = value;
+        },
+        status(statusCode) {
+            this.statusCode = statusCode;
+            return this;
+        },
+        json(body) {
+            this.body = body;
+            return this;
+        },
+    };
+    const error = new Error('DATABASE_URL não está configurada.');
+    error.code = 'DATABASE_URL_MISSING';
+
+    sendServerError(response, error, 'Database unavailable:', 'Unexpected server error.');
+
+    assert.equal(response.statusCode, 503);
+    assert.match(response.body.error, /DATABASE_URL/);
+    assert.equal(response.headers['Cache-Control'], 'no-store');
 });
