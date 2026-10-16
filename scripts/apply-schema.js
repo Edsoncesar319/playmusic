@@ -23,4 +23,16 @@ for (const statement of statements) {
     await sql.query(statement);
 }
 
-console.log(`Schema do Neon aplicado: ${statements.length} instruções idempotentes.`);
+const tables = await sql.query(`
+    SELECT table_name
+    FROM information_schema.tables
+    WHERE table_schema = 'public'
+      AND table_name IN ('users', 'user_sessions')
+    ORDER BY table_name
+`);
+const availableTables = tables.map(row => row.table_name);
+if (availableTables.join(',') !== 'user_sessions,users') {
+    throw new Error('A verificação do schema não encontrou todas as tabelas de autenticação.');
+}
+
+console.log(`Schema do Neon aplicado e verificado: ${availableTables.join(', ')}.`);
