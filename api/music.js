@@ -1,6 +1,6 @@
 import { list } from '@vercel/blob';
 import { getCurrentUser } from '../lib/auth.js';
-import { sendJson } from '../lib/http.js';
+import { sendJson, sendServerError } from '../lib/http.js';
 
 async function listAll(prefix) {
     const blobs = [];
@@ -55,8 +55,7 @@ export default async function handler(request, response) {
             return sendJson(response, 401, { error: 'Autenticação necessária.' });
         }
     } catch (error) {
-        console.error('Falha ao verificar a sessão para listar músicas:', error);
-        return sendJson(response, 500, { error: 'Não foi possível verificar a sessão.' });
+        return sendServerError(response, error, 'Falha ao verificar a sessão para listar músicas:', 'Não foi possível verificar a sessão.');
     }
 
     if (!process.env.BLOB_READ_WRITE_TOKEN) {
@@ -96,7 +95,6 @@ export default async function handler(request, response) {
 
         return sendJson(response, 200, { music });
     } catch (error) {
-        console.error('Falha ao listar arquivos do Vercel Blob:', error);
-        return sendJson(response, 500, { error: 'Não foi possível carregar a biblioteca do Blob.' });
+        return sendServerError(response, error, 'Falha ao listar arquivos do Vercel Blob:', 'Não foi possível carregar a biblioteca do Blob.');
     }
 }

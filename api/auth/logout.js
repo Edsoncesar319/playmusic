@@ -1,5 +1,5 @@
 import { clearCurrentSession } from '../../lib/auth.js';
-import { isSameOrigin, sendJson } from '../../lib/http.js';
+import { isSameOrigin, sendJson, sendServerError } from '../../lib/http.js';
 
 export default async function handler(request, response) {
     if (request.method !== 'POST') {
@@ -15,7 +15,6 @@ export default async function handler(request, response) {
         await clearCurrentSession(request, response);
         return sendJson(response, 200, { success: true });
     } catch (error) {
-        console.error('Falha ao encerrar sessão:', error);
-        return sendJson(response, 500, { error: 'Não foi possível encerrar a sessão.' });
+        return sendServerError(response, error, 'Falha ao encerrar sessão:', 'Não foi possível encerrar a sessão.');
     }
 }

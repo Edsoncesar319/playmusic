@@ -9,7 +9,7 @@ import {
     verifyPassword,
 } from '../../lib/auth.js';
 import { getDb } from '../../lib/db.js';
-import { isSameOrigin, readJsonBody, sendJson } from '../../lib/http.js';
+import { isSameOrigin, readJsonBody, sendJson, sendServerError } from '../../lib/http.js';
 
 export default async function handler(request, response) {
     if (!['GET', 'PATCH', 'DELETE'].includes(request.method)) {
@@ -86,7 +86,6 @@ export default async function handler(request, response) {
             return sendJson(response, 409, { error: 'Já existe uma conta com esse e-mail.' });
         }
 
-        console.error('Falha ao acessar a conta:', error);
-        return sendJson(response, 500, { error: 'Não foi possível processar a conta.' });
+        return sendServerError(response, error, 'Falha ao acessar a conta:', 'Não foi possível processar a conta.');
     }
 }

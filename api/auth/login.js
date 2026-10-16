@@ -4,7 +4,7 @@ import {
     verifyPassword,
 } from '../../lib/auth.js';
 import { getDb } from '../../lib/db.js';
-import { isSameOrigin, readJsonBody, sendJson } from '../../lib/http.js';
+import { isSameOrigin, readJsonBody, sendJson, sendServerError } from '../../lib/http.js';
 
 export default async function handler(request, response) {
     if (request.method !== 'POST') {
@@ -40,7 +40,6 @@ export default async function handler(request, response) {
         await createSession(user.id, response);
         return sendJson(response, 200, { user });
     } catch (error) {
-        console.error('Falha ao iniciar sessão:', error);
-        return sendJson(response, 500, { error: 'Não foi possível iniciar sessão.' });
+        return sendServerError(response, error, 'Falha ao iniciar sessão:', 'Não foi possível iniciar sessão.');
     }
 }

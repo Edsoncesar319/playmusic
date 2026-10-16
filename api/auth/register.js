@@ -6,7 +6,7 @@ import {
     normalizeEmail,
 } from '../../lib/auth.js';
 import { getDb } from '../../lib/db.js';
-import { isSameOrigin, readJsonBody, sendJson } from '../../lib/http.js';
+import { isSameOrigin, readJsonBody, sendJson, sendServerError } from '../../lib/http.js';
 
 export default async function handler(request, response) {
     if (request.method !== 'POST') {
@@ -46,7 +46,6 @@ export default async function handler(request, response) {
             return sendJson(response, 409, { error: 'Já existe uma conta com esse e-mail.' });
         }
 
-        console.error('Falha ao criar conta:', error);
-        return sendJson(response, 500, { error: 'Não foi possível criar a conta.' });
+        return sendServerError(response, error, 'Falha ao criar conta:', 'Não foi possível criar a conta.');
     }
 }

@@ -1,6 +1,6 @@
 import { handleUpload } from '@vercel/blob/client';
 import { getCurrentUser } from '../lib/auth.js';
-import { isSameOrigin, sendJson } from '../lib/http.js';
+import { isSameOrigin, sendJson, sendServerError } from '../lib/http.js';
 
 const audioTypes = [
     'audio/aac',
@@ -39,8 +39,7 @@ export default async function handler(request, response) {
             return sendJson(response, 401, { error: 'Autenticação necessária.' });
         }
     } catch (error) {
-        console.error('Falha ao verificar a sessão para upload:', error);
-        return sendJson(response, 500, { error: 'Não foi possível verificar a sessão.' });
+        return sendServerError(response, error, 'Falha ao verificar a sessão para upload:', 'Não foi possível verificar a sessão.');
     }
 
     if (!process.env.BLOB_READ_WRITE_TOKEN) {
