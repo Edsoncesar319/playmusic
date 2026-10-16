@@ -7,6 +7,7 @@ import {
     normalizeEmail,
     verifyPassword,
 } from '../lib/auth.js';
+import { getDb } from '../lib/db.js';
 import { isSameOrigin, readJsonBody, sendServerError } from '../lib/http.js';
 
 test('normalizes and validates account emails', () => {
@@ -78,4 +79,20 @@ test('reports missing database configuration as a service-unavailable response',
     assert.equal(response.statusCode, 503);
     assert.match(response.body.error, /DATABASE_URL/);
     assert.equal(response.headers['Cache-Control'], 'no-store');
+});
+
+test('accepts the Neon integration database URL when DATABASE_URL is not defined', () => {
+    const databaseUrl = process.env.DATABASE_URL;
+    const neonIntegrationUrl = process.env.Musickera_DATABASE_URL;
+    process.env.DATABASE_URL = '';
+    process.env.Musickera_DATABASE_URL = 'postgresql://user:password@localhost/database';
+
+    try {
+        assert.equal(typeof getDb(), 'function');
+    } finally {
+        if (databaseUrl === undefined) delete process.env.DATABASE_URL;
+        else process.env.DATABASE_URL = databaseUrl;
+        if (neonIntegrationUrl === undefined) delete process.env.Musickera_DATABASE_URL;
+        else process.env.Musickera_DATABASE_URL = neonIntegrationUrl;
+    }
 });
