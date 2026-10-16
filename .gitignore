@@ -5,3 +5,5 @@ public/
 .env.*
 !.env.example
 data/
+.vercel
+.env*
