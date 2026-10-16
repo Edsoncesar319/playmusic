@@ -110,14 +110,14 @@ Crie um banco PostgreSQL no Neon e execute [`database/schema.sql`](./database/sc
 - `DATABASE_URL`: connection string do Neon, de preferência a pooled connection string.
 - `BLOB_READ_WRITE_TOKEN`: token do armazenamento Vercel Blob.
 
-Para desenvolvimento local, defina essas variáveis no `.env.local` ou use `vercel env pull .env.local`. Nunca coloque credenciais no HTML, no JavaScript do navegador ou no repositório.
+Para desenvolvimento local, autentique e vincule o projeto com `npx vercel login` e `npx vercel link`, depois execute `npx vercel env pull .env.development.local`. Nunca coloque credenciais no HTML, no JavaScript do navegador ou no repositório.
 
 Configure `DATABASE_URL` e `BLOB_READ_WRITE_TOKEN` no projeto Vercel para **Development**, **Preview** e **Production**, conforme necessário. Conecte o armazenamento Blob ao projeto em **Storage** ou crie um token de leitura/escrita para o store correto. O token já identifica o store; `BLOB_STORE_ID` não precisa ser exposto ao código do navegador.
 
-Para executar localmente com Neon e Blob, instale as dependências, preencha `.env.local` (use `.env.example` como referência) e inicie pela CLI:
+Para executar localmente com Neon e Blob, instale as dependências e inicie pela CLI:
 ```bash
- npm ci
- npm run build
+npm ci
+npm run build
 npx vercel dev
 ```
 Abra o endereço local exibido pela CLI. O build copia as páginas para `public/` e empacota o cliente oficial de upload Blob para o navegador. O script `setup.bat` também inicia o servidor da Vercel.
