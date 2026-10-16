@@ -11,5 +11,8 @@
   "dependencies": {
     "@neondatabase/serverless": "^1.0.2",
     "@vercel/blob": "2.8.2"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.2"
   }
 }

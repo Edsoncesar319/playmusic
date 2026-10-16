@@ -162,6 +162,40 @@
             letter-spacing: -0.5px;
         }
 
+        .user-account {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            flex-shrink: 0;
+            padding: 8px 14px;
+            border: 1px solid rgba(255, 255, 255, 0.16);
+            border-radius: 24px;
+            background: rgba(255, 255, 255, 0.08);
+            color: #fff;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s ease, border-color 0.2s ease;
+        }
+
+        .user-account:hover,
+        .user-account:focus-visible {
+            background: rgba(255, 255, 255, 0.16);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .user-account[hidden] {
+            display: none !important;
+        }
+
+        .user-account-name {
+            max-width: 160px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
         .search-container {
             display: flex;
             align-items: center;
@@ -911,6 +945,10 @@
                 font-size: 24px;
             }
 
+            .user-account {
+                align-self: flex-end;
+            }
+
             .search-bar {
                 width: 100%;
                 max-width: 300px;
@@ -989,6 +1027,10 @@
 
             .header h1 {
                 font-size: 20px;
+            }
+
+            .user-account {
+                padding: 7px 12px;
             }
 
             .player-section {
@@ -1329,6 +1371,12 @@
                     <!-- Search results will be populated here -->
                 </div>
             </div>
+            <button class="user-account" id="userAccountButton" type="button" hidden
+                aria-label="Abrir perfil da conta" title="Abrir perfil da conta"
+                onclick="window.location.assign('/login.html')">
+                <span class="material-symbols-rounded" aria-hidden="true">account_circle</span>
+                <span class="user-account-name" id="userAccountName"></span>
+            </button>
         </div>
 
         <div class="player-section" id="playerSection" hidden>
@@ -1447,6 +1495,12 @@
         async function activateUser(user) {
             currentUser = user;
             document.getElementById('playerSection').hidden = false;
+            document.getElementById('userAccountName').textContent = user.displayName;
+            document.getElementById('userAccountButton').setAttribute(
+                'aria-label',
+                `Abrir perfil da conta de ${user.displayName}`
+            );
+            document.getElementById('userAccountButton').hidden = false;
 
             try {
                 await initDB(user.id);
@@ -1459,6 +1513,7 @@
 
         function clearUserState(message = '') {
             currentUser = null;
+            document.getElementById('userAccountButton').hidden = true;
             db?.close();
             db = null;
             audio.pause();
