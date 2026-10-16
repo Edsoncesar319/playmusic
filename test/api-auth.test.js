@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import musicHandler from '../api/music.js';
 import trackHandler from '../api/music/[trackId].js';
 import uploadHandler from '../api/upload.js';
+import loginHandler from '../api/auth/login.js';
 import accountHandler from '../api/auth/me.js';
 import registerHandler from '../api/auth/register.js';
 import healthHandler from '../api/health.js';
@@ -52,6 +53,28 @@ test('Vercel health endpoint reports the configured storage provider', () => {
     healthHandler({ method: 'GET', headers: {} }, response);
     assert.equal(response.statusCode, 200);
     assert.deepEqual(response.body, { status: 'ok', storage: 'vercel' });
+});
+
+test('login reports missing database configuration instead of a generic server error', async () => {
+    const configuredDatabaseUrl = process.env.DATABASE_URL;
+    const originalConsoleError = console.error;
+    delete process.env.DATABASE_URL;
+    console.error = () => {};
+
+    try {
+        const response = mockResponse();
+        await loginHandler({
+            method: 'POST',
+            headers: { origin: 'https://music.example', host: 'music.example' },
+            body: { email: 'user@example.com', password: 'long-enough-password' },
+        }, response);
+        assert.equal(response.statusCode, 503);
+        assert.match(response.body.error, /DATABASE_URL/);
+    } finally {
+        if (configuredDatabaseUrl === undefined) delete process.env.DATABASE_URL;
+        else process.env.DATABASE_URL = configuredDatabaseUrl;
+        console.error = originalConsoleError;
+    }
 });
 
 test('track endpoint validates methods and identifiers before accessing Blob', async () => {

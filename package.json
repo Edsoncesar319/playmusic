@@ -6,11 +6,11 @@
     "node": "24.x"
   },
   "scripts": {
-    "build": "esbuild lib/blob-client.js --bundle --platform=browser --format=esm --minify --outfile=blob-client.js",
+    "build": "node scripts/build.js",
     "test": "node --test"
   },
   "dependencies": {
-    "@neondatabase/serverless": "^1.0.2",
+    "@neondatabase/serverless": "^1.2.0",
     "@vercel/blob": "2.8.2"
   },
   "devDependencies": {

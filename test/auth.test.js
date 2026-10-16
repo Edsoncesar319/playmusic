@@ -66,8 +66,14 @@ test('reports missing database configuration as a service-unavailable response',
     };
     const error = new Error('DATABASE_URL não está configurada.');
     error.code = 'DATABASE_URL_MISSING';
+    const originalConsoleError = console.error;
+    console.error = () => {};
 
-    sendServerError(response, error, 'Database unavailable:', 'Unexpected server error.');
+    try {
+        sendServerError(response, error, 'Database unavailable:', 'Unexpected server error.');
+    } finally {
+        console.error = originalConsoleError;
+    }
 
     assert.equal(response.statusCode, 503);
     assert.match(response.body.error, /DATABASE_URL/);
