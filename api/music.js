@@ -58,10 +58,6 @@ export default async function handler(request, response) {
         return sendServerError(response, error, 'Falha ao verificar a sessão para listar músicas:', 'Não foi possível verificar a sessão.');
     }
 
-    if (!process.env.BLOB_READ_WRITE_TOKEN) {
-        return sendJson(response, 503, { error: 'O Vercel Blob não está configurado.' });
-    }
-
     try {
         const [musicBlobs, coverBlobs] = await Promise.all([
             listAll('music/'),

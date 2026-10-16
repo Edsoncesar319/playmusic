@@ -1,4 +1,5 @@
-import { handleUpload } from '@vercel/blob/client';
+import { issueSignedToken } from '@vercel/blob';
+import { handleUploadPresigned } from '@vercel/blob/client';
 import { getCurrentUser } from '../lib/auth.js';
 import { isSameOrigin, sendJson, sendServerError } from '../lib/http.js';
 
@@ -42,24 +43,36 @@ export default async function handler(request, response) {
         return sendServerError(response, error, 'Falha ao verificar a sessão para upload:', 'Não foi possível verificar a sessão.');
     }
 
-    if (!process.env.BLOB_READ_WRITE_TOKEN) {
+    if (!process.env.BLOB_STORE_ID || !process.env.BLOB_WEBHOOK_PUBLIC_KEY) {
         return sendJson(response, 503, { error: 'O Vercel Blob não está configurado.' });
     }
 
     try {
-        const result = await handleUpload({
+        const result = await handleUploadPresigned({
             body: request.body,
             request,
-            onBeforeGenerateToken: async (pathname) => {
+            getSignedToken: async (pathname) => {
                 if (!uploadPathPattern.test(pathname)) {
                     throw new Error('Caminho de upload inválido.');
                 }
 
                 const isCover = pathname.startsWith('covers/');
+                const allowedContentTypes = isCover ? imageTypes : audioTypes;
+                const maximumSizeInBytes = isCover
+                    ? 10 * 1024 * 1024
+                    : 100 * 1024 * 1024;
                 return {
-                    allowedContentTypes: isCover ? imageTypes : audioTypes,
-                    maximumSizeInBytes: isCover ? 10 * 1024 * 1024 : 100 * 1024 * 1024,
-                    addRandomSuffix: isCover,
+                    token: await issueSignedToken({
+                        pathname,
+                        operations: ['put'],
+                        allowedContentTypes,
+                        maximumSizeInBytes,
+                    }),
+                    urlOptions: {
+                        allowedContentTypes,
+                        maximumSizeInBytes,
+                        addRandomSuffix: isCover,
+                    },
                 };
             },
         });
@@ -67,6 +80,6 @@ export default async function handler(request, response) {
         return sendJson(response, 200, result);
     } catch (error) {
         console.error('Falha ao autorizar upload para o Vercel Blob:', error);
-        return sendJson(response, 400, { error: 'Não foi possível autorizar o upload.' });
+        return sendJson(response, 500, { error: 'Não foi possível autorizar o upload no Vercel Blob.' });
     }
 }

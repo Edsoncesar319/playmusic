@@ -62,10 +62,6 @@ export default async function handler(request, response) {
     if (!isSameOrigin(request)) {
         return sendJson(response, 403, { error: 'Origem da solicitação não permitida.' });
     }
-    if (!process.env.BLOB_READ_WRITE_TOKEN) {
-        return sendJson(response, 503, { error: 'O Vercel Blob não está configurado.' });
-    }
-
     try {
         const musicBlobs = await listAll(`music/${trackId}/`);
         if (musicBlobs.length === 0) {

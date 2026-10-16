@@ -7,6 +7,7 @@
   },
   "scripts": {
     "build": "node scripts/build.js",
+    "check:blob": "node scripts/check-blob.js",
     "test": "node --test"
   },
   "dependencies": {

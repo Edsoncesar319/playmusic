@@ -108,11 +108,11 @@ npm install
 Crie um banco PostgreSQL no Neon e execute [`database/schema.sql`](./database/schema.sql) no SQL Editor do Neon. Configure no painel da Vercel:
 
 - `DATABASE_URL`: connection string do Neon, de preferência a pooled connection string.
-- `BLOB_READ_WRITE_TOKEN`: token do armazenamento Vercel Blob.
+- Blob Storage conectado ao projeto Vercel, com `BLOB_STORE_ID` e `BLOB_WEBHOOK_PUBLIC_KEY` habilitados. O Blob SDK usa o OIDC da Vercel para assinar uploads; um token `BLOB_READ_WRITE_TOKEN` continua compatível como alternativa.
 
 Para desenvolvimento local, autentique e vincule o projeto com `npx vercel login` e `npx vercel link`, depois execute `npx vercel env pull .env.development.local`. Nunca coloque credenciais no HTML, no JavaScript do navegador ou no repositório.
 
-Configure `DATABASE_URL` e `BLOB_READ_WRITE_TOKEN` no projeto Vercel para **Development**, **Preview** e **Production**, conforme necessário. Conecte o armazenamento Blob ao projeto em **Storage** ou crie um token de leitura/escrita para o store correto. O token já identifica o store; `BLOB_STORE_ID` não precisa ser exposto ao código do navegador.
+Configure a URL do Neon no projeto Vercel para **Development**, **Preview** e **Production**, conforme necessário. Conecte o armazenamento Blob ao projeto em **Storage**, habilitando `BLOB_STORE_ID` e `BLOB_WEBHOOK_PUBLIC_KEY`; as Functions usam OIDC da Vercel para listar, editar, remover e assinar uploads diretos. Um `BLOB_READ_WRITE_TOKEN` permanece compatível como alternativa para ambientes que não disponibilizam OIDC. Não exponha credenciais ao navegador.
 
 Para executar localmente com Neon e Blob, instale as dependências e inicie pela CLI:
 ```bash
@@ -122,7 +122,7 @@ npx vercel dev
 ```
 Abra o endereço local exibido pela CLI. O build copia as páginas para `public/` e empacota o cliente oficial de upload Blob para o navegador. O script `setup.bat` também inicia o servidor da Vercel.
 
-Para publicar, autentique e vincule o repositório à Vercel com `npx vercel login` e `npx vercel link`, configure as variáveis de ambiente e execute `npx vercel --prod`. A Vercel usa `vercel.json` para executar o build e publicar somente `public/` como conteúdo estático; as rotas de `api/` são Functions Node.js. Cada conta pode consultar e enviar arquivos para a biblioteca compartilhada; os endpoints de listagem, upload, edição e exclusão exigem uma sessão válida. Os uploads de áudio (até 100 MB) e de capas (até 10 MB) vão diretamente do navegador ao Blob; as funções mantêm o token no servidor. O player também mantém uma cópia local dos áudios no navegador, separada por conta.
+Para publicar, autentique e vincule o repositório à Vercel com `npx vercel login` e `npx vercel link`, configure as variáveis de ambiente e execute `npx vercel --prod`. A Vercel usa `vercel.json` para executar o build e publicar somente `public/` como conteúdo estático; as rotas de `api/` são Functions Node.js. Cada conta pode consultar e enviar arquivos para a biblioteca compartilhada; os endpoints de listagem, upload, edição e exclusão exigem uma sessão válida. Os uploads de áudio (até 100 MB) e de capas (até 10 MB) vão diretamente do navegador ao Blob por URLs assinadas, sem enviar credenciais ao cliente. O player também mantém uma cópia local dos áudios no navegador, separada por conta.
 
 O Vercel Blob deste projeto usa arquivos públicos. A autenticação protege a listagem e a autorização de novos uploads, mas um URL público de arquivo já compartilhado pode ser aberto por qualquer pessoa que o possua. O backend Python local serve os arquivos pelo próprio servidor e não os envia ao Blob.
 
