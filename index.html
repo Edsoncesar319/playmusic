@@ -767,6 +767,70 @@
             margin: 0;
         }
 
+        .playlist-management {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .playlist-management select,
+        .playlist-management button {
+            min-height: 40px;
+            border: 1px solid rgba(255, 255, 255, 0.16);
+            border-radius: 20px;
+            padding: 8px 14px;
+            color: #fff;
+            font: inherit;
+            touch-action: manipulation;
+        }
+
+        .playlist-management select {
+            flex: 1 1 150px;
+            min-width: 0;
+            background: #181818;
+        }
+
+        .playlist-management button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            background: rgba(255, 255, 255, 0.08);
+            cursor: pointer;
+        }
+
+        .playlist-management button:hover {
+            background: rgba(255, 255, 255, 0.16);
+        }
+
+        .playlist-management .playlist-create-button {
+            border-color: rgba(29, 185, 84, 0.5);
+            background: rgba(29, 185, 84, 0.18);
+        }
+
+        .playlist-management [hidden] {
+            display: none;
+        }
+
+        .playlist-management #customPlaylistActions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .playlist-track-action {
+            flex: 0 0 auto;
+            opacity: 1;
+            padding: 8px !important;
+            color: #1ed760 !important;
+        }
+
+        .playlist-track-action.remove-from-playlist {
+            color: #ff7777 !important;
+        }
+
         .upload-button {
             background: #1DB954;
             color: #fff;
@@ -1430,10 +1494,23 @@
 
             <div class="playlist">
                 <div class="playlist-title">
-                    <h3>Playlist</h3>
+                    <h3 id="playlistHeading">Biblioteca</h3>
                     <button class="upload-button" onclick="document.getElementById('fileInput').click()">
                         <span class="material-symbols-rounded" aria-hidden="true">upload_file</span> Upload
                     </button>
+                </div>
+                <div class="playlist-management">
+                    <select id="customPlaylistSelect" aria-label="Selecionar playlist" onchange="selectCustomPlaylist(this.value)">
+                        <option value="">Biblioteca</option>
+                    </select>
+                    <button type="button" class="playlist-create-button" onclick="createCustomPlaylist()">
+                        <span class="material-symbols-rounded" aria-hidden="true">add</span> Criar playlist
+                    </button>
+                    <div id="customPlaylistActions" hidden>
+                        <button type="button" onclick="renameCustomPlaylist()">Renomear</button>
+                        <button type="button" onclick="deleteCustomPlaylist()">Excluir</button>
+                        <button type="button" id="playlistAddTracksButton" onclick="togglePlaylistAddMode()">Adicionar músicas</button>
+                    </div>
                 </div>
                 <input type="file" id="fileInput" accept="audio/*" multiple onchange="handleFileUpload(event)" style="display: none;">
                 <ul class="track-list">
@@ -1446,25 +1523,20 @@
 
     <script>
         const playlist = [];
+        const customPlaylists = [];
 
         let currentTrack = 0;
+        let activeCustomPlaylistId = null;
+        let playlistAddMode = false;
         let isPlaying = false;
         let audio = new Audio();
         let repeatMode = 'none'; // 'none', 'one', 'all'
         let currentUser = null;
         let storageProviderPromise = null;
 
-        const startupSplash = document.getElementById('startupSplash');
-        window.addEventListener('pointerdown', () => {
-            if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-            startupSplash.classList.remove('is-visible');
-            void startupSplash.offsetWidth;
-            startupSplash.classList.add('is-visible');
-        });
-
         // Configuração do IndexedDB
         const dbName = 'MusickeraDB';
-        const dbVersion = 1;
+        const dbVersion = 2;
         const defaultCover = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1 1'%3E%3Crect width='1' height='1' fill='%23181818'/%3E%3C/svg%3E";
         let db;
 
@@ -1495,6 +1567,9 @@
                         musicStore.createIndex('artist', 'artist', { unique: false });
                         musicStore.createIndex('album', 'album', { unique: false });
                     }
+                    if (!db.objectStoreNames.contains('playlists')) {
+                        db.createObjectStore('playlists', { keyPath: 'id', autoIncrement: true });
+                    }
                 };
             });
         }
@@ -1517,6 +1592,7 @@
 
             try {
                 await initDB(user.id);
+                await loadCustomPlaylistsFromDB();
                 await loadPlaylistFromDB();
             } catch (error) {
                 console.error('Falha ao carregar a biblioteca local:', error);
@@ -1539,7 +1615,11 @@
                 }
             }
             playlist.length = 0;
+            customPlaylists.length = 0;
             currentTrack = 0;
+            activeCustomPlaylistId = null;
+            playlistAddMode = false;
+            renderCustomPlaylistControls();
             updatePlaylistHTML();
             redirectToLogin(message);
         }
@@ -1598,6 +1678,65 @@
                     console.error('Erro ao carregar músicas:', event.target.error);
                     reject(event.target.error);
                 };
+            });
+        }
+
+        function loadCustomPlaylistsFromDB() {
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction(['playlists'], 'readonly');
+                const request = transaction.objectStore('playlists').getAll();
+
+                request.onsuccess = () => {
+                    customPlaylists.length = 0;
+                    customPlaylists.push(...request.result.map(item => ({
+                        ...item,
+                        trackKeys: Array.isArray(item.trackKeys) ? item.trackKeys : []
+                    })));
+                    renderCustomPlaylistControls();
+                    resolve();
+                };
+
+                request.onerror = () => reject(request.error);
+            });
+        }
+
+        function saveCustomPlaylistToDB(customPlaylist) {
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction(['playlists'], 'readwrite');
+                const request = transaction.objectStore('playlists').put(customPlaylist);
+
+                transaction.oncomplete = () => resolve();
+                transaction.onabort = () => reject(transaction.error || new Error('A gravação da playlist foi cancelada.'));
+                transaction.onerror = () => reject(transaction.error || request.error);
+                request.onerror = () => reject(request.error);
+            });
+        }
+
+        function addCustomPlaylistToDB(customPlaylist) {
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction(['playlists'], 'readwrite');
+                const request = transaction.objectStore('playlists').add(customPlaylist);
+                let id;
+
+                request.onsuccess = () => {
+                    id = request.result;
+                };
+                transaction.oncomplete = () => resolve(id);
+                transaction.onabort = () => reject(transaction.error || new Error('A criação da playlist foi cancelada.'));
+                transaction.onerror = () => reject(transaction.error || request.error);
+                request.onerror = () => reject(request.error);
+            });
+        }
+
+        function deleteCustomPlaylistFromDB(id) {
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction(['playlists'], 'readwrite');
+                const request = transaction.objectStore('playlists').delete(id);
+
+                transaction.oncomplete = () => resolve();
+                transaction.onabort = () => reject(transaction.error || new Error('A exclusão da playlist foi cancelada.'));
+                transaction.onerror = () => reject(transaction.error || request.error);
+                request.onerror = () => reject(request.error);
             });
         }
 
@@ -1688,17 +1827,29 @@
         }
 
         function nextTrack() {
-            if (playlist.length === 0) return;
-            currentTrack = (currentTrack + 1) % playlist.length;
+            const queue = getPlaybackTrackIndexes();
+            if (queue.length === 0) return;
+            const position = queue.indexOf(currentTrack);
+            currentTrack = queue[(position + 1) % queue.length];
             loadTrack();
             updatePlayButtonIcon();
         }
 
         function previousTrack() {
-            if (playlist.length === 0) return;
-            currentTrack = (currentTrack - 1 + playlist.length) % playlist.length;
+            const queue = getPlaybackTrackIndexes();
+            if (queue.length === 0) return;
+            const position = queue.indexOf(currentTrack);
+            currentTrack = queue[(position <= 0 ? queue.length : position) - 1];
             loadTrack();
             updatePlayButtonIcon();
+        }
+
+        function getPlaybackTrackIndexes() {
+            const customPlaylist = getActiveCustomPlaylist();
+            if (!customPlaylist || playlistAddMode) return playlist.map((_, index) => index);
+            return customPlaylist.trackKeys
+                .map(key => playlist.findIndex(track => getTrackKey(track) === key))
+                .filter(index => index >= 0);
         }
 
         function loadTrack() {
@@ -1923,34 +2074,239 @@
             }, 300);
         });
 
+        function getTrackKey(track) {
+            if (track.blobId) return `blob:${track.blobId}`;
+            if (track.id !== undefined && track.id !== null) return `local:${track.id}`;
+            if (track.source === 'deezer' && track.deezerId) return `deezer:${track.deezerId}`;
+            if (track.source === 'youtube' && track.youtubeId) return `youtube:${track.youtubeId}`;
+            return null;
+        }
+
+        function getCustomPlaylistTrackSnapshot(track) {
+            if (track.source !== 'deezer' && track.source !== 'youtube') return null;
+            return {
+                title: track.title,
+                artist: track.artist,
+                album: track.album,
+                duration: track.duration,
+                cover: track.cover,
+                file: track.file,
+                source: track.source,
+                deezerId: track.deezerId,
+                youtubeId: track.youtubeId
+            };
+        }
+
+        function getActiveCustomPlaylist() {
+            return customPlaylists.find(item => item.id === activeCustomPlaylistId);
+        }
+
+        function renderCustomPlaylistControls() {
+            const selector = document.getElementById('customPlaylistSelect');
+            const actions = document.getElementById('customPlaylistActions');
+            const selectedPlaylist = getActiveCustomPlaylist();
+
+            selector.innerHTML = '<option value="">Biblioteca</option>' + customPlaylists.map(item =>
+                `<option value="${escapeHTML(item.id)}">${escapeHTML(item.name)}</option>`
+            ).join('');
+            selector.value = selectedPlaylist ? String(selectedPlaylist.id) : '';
+            actions.hidden = !selectedPlaylist;
+            document.getElementById('playlistAddTracksButton').textContent =
+                playlistAddMode ? 'Voltar à playlist' : 'Adicionar músicas';
+            document.getElementById('playlistHeading').textContent = selectedPlaylist
+                ? (playlistAddMode ? `Adicionar músicas: ${selectedPlaylist.name}` : selectedPlaylist.name)
+                : 'Biblioteca';
+        }
+
+        function selectCustomPlaylist(id) {
+            activeCustomPlaylistId = id ? customPlaylists.find(item => String(item.id) === id)?.id ?? null : null;
+            playlistAddMode = false;
+            updatePlaylistHTML();
+        }
+
+        async function createCustomPlaylist() {
+            if (!db) {
+                alert('Aguarde o carregamento da biblioteca antes de criar uma playlist.');
+                return;
+            }
+
+            const name = prompt('Nome da playlist:');
+            if (name === null) return;
+            const normalizedName = name.trim();
+            if (!normalizedName) {
+                alert('Informe um nome para a playlist.');
+                return;
+            }
+            if (customPlaylists.some(item => item.name.toLocaleLowerCase('pt-BR') === normalizedName.toLocaleLowerCase('pt-BR'))) {
+                alert('Já existe uma playlist com esse nome.');
+                return;
+            }
+
+            try {
+                const customPlaylist = { name: normalizedName, trackKeys: [], trackData: {} };
+                customPlaylist.id = await addCustomPlaylistToDB(customPlaylist);
+                customPlaylists.push(customPlaylist);
+                activeCustomPlaylistId = customPlaylist.id;
+                playlistAddMode = false;
+                updatePlaylistHTML();
+            } catch (error) {
+                console.error('Erro ao criar playlist:', error);
+                alert('Não foi possível criar a playlist.');
+            }
+        }
+
+        async function renameCustomPlaylist() {
+            const customPlaylist = getActiveCustomPlaylist();
+            if (!customPlaylist) return;
+
+            const name = prompt('Novo nome da playlist:', customPlaylist.name);
+            if (name === null) return;
+            const normalizedName = name.trim();
+            if (!normalizedName) {
+                alert('Informe um nome para a playlist.');
+                return;
+            }
+            if (customPlaylists.some(item =>
+                item.id !== customPlaylist.id &&
+                item.name.toLocaleLowerCase('pt-BR') === normalizedName.toLocaleLowerCase('pt-BR')
+            )) {
+                alert('Já existe uma playlist com esse nome.');
+                return;
+            }
+
+            try {
+                const updatedPlaylist = { ...customPlaylist, name: normalizedName };
+                await saveCustomPlaylistToDB(updatedPlaylist);
+                Object.assign(customPlaylist, updatedPlaylist);
+                updatePlaylistHTML();
+            } catch (error) {
+                console.error('Erro ao renomear playlist:', error);
+                alert('Não foi possível renomear a playlist.');
+            }
+        }
+
+        async function deleteCustomPlaylist() {
+            const customPlaylist = getActiveCustomPlaylist();
+            if (!customPlaylist || !confirm(`Excluir a playlist "${customPlaylist.name}"?`)) return;
+
+            try {
+                await deleteCustomPlaylistFromDB(customPlaylist.id);
+                customPlaylists.splice(customPlaylists.indexOf(customPlaylist), 1);
+                activeCustomPlaylistId = null;
+                playlistAddMode = false;
+                updatePlaylistHTML();
+            } catch (error) {
+                console.error('Erro ao excluir playlist:', error);
+                alert('Não foi possível excluir a playlist.');
+            }
+        }
+
+        function togglePlaylistAddMode() {
+            if (!getActiveCustomPlaylist()) return;
+            playlistAddMode = !playlistAddMode;
+            updatePlaylistHTML();
+        }
+
+        async function addTrackToCustomPlaylist(index) {
+            const customPlaylist = getActiveCustomPlaylist();
+            const track = playlist[index];
+            const key = track && getTrackKey(track);
+            if (!customPlaylist || !key || customPlaylist.trackKeys.includes(key)) return;
+
+            try {
+                const updatedPlaylist = {
+                    ...customPlaylist,
+                    trackKeys: [...customPlaylist.trackKeys, key],
+                    trackData: {
+                        ...customPlaylist.trackData,
+                        ...(getCustomPlaylistTrackSnapshot(track)
+                            ? { [key]: getCustomPlaylistTrackSnapshot(track) }
+                            : {})
+                    }
+                };
+                await saveCustomPlaylistToDB(updatedPlaylist);
+                customPlaylist.trackKeys = updatedPlaylist.trackKeys;
+                customPlaylist.trackData = updatedPlaylist.trackData;
+                updatePlaylistHTML();
+            } catch (error) {
+                console.error('Erro ao adicionar música à playlist:', error);
+                alert('Não foi possível adicionar a música à playlist.');
+            }
+        }
+
+        async function removeTrackFromCustomPlaylist(index) {
+            const customPlaylist = getActiveCustomPlaylist();
+            const track = playlist[index];
+            const key = track && getTrackKey(track);
+            if (!customPlaylist || !key || !customPlaylist.trackKeys.includes(key)) return;
+
+            try {
+                const updatedPlaylist = {
+                    ...customPlaylist,
+                    trackKeys: customPlaylist.trackKeys.filter(trackKey => trackKey !== key),
+                    trackData: { ...customPlaylist.trackData }
+                };
+                delete updatedPlaylist.trackData[key];
+                await saveCustomPlaylistToDB(updatedPlaylist);
+                customPlaylist.trackKeys = updatedPlaylist.trackKeys;
+                customPlaylist.trackData = updatedPlaylist.trackData;
+                updatePlaylistHTML();
+            } catch (error) {
+                console.error('Erro ao remover música da playlist:', error);
+                alert('Não foi possível remover a música da playlist.');
+            }
+        }
+
         // Atualiza a função updatePlaylistHTML para usar o valor atual da busca
         function updatePlaylistHTML() {
             const trackList = document.querySelector('.track-list');
             const clearButton = document.querySelector('.clear-playlist');
+            const customPlaylist = getActiveCustomPlaylist();
+            const showingLibrary = !customPlaylist || playlistAddMode;
+            const visibleTracks = showingLibrary
+                ? playlist.map((track, index) => ({ track, index }))
+                : customPlaylist.trackKeys.map(key => ({
+                    track: playlist.find(track => getTrackKey(track) === key),
+                    index: playlist.findIndex(track => getTrackKey(track) === key)
+                })).filter(item => item.index >= 0);
 
-            if (playlist.length === 0) {
-                trackList.innerHTML = '<li class="no-results">Sua playlist está vazia. Envie uma música para começar.</li>';
+            renderCustomPlaylistControls();
+            if (visibleTracks.length === 0) {
+                trackList.innerHTML = customPlaylist && !playlistAddMode
+                    ? '<li class="no-results">Esta playlist está vazia. Use "Adicionar músicas" para escolher faixas da biblioteca.</li>'
+                    : '<li class="no-results">Sua biblioteca está vazia. Envie uma música para começar.</li>';
                 clearButton.style.display = 'none';
                 return;
             }
             
-            // Atualiza a lista de músicas
-            trackList.innerHTML = playlist.map((track, index) => `
+            trackList.innerHTML = visibleTracks.map(({ track, index }, visibleIndex) => {
+                const trackKey = getTrackKey(track);
+                const isInCustomPlaylist = customPlaylist && trackKey && customPlaylist.trackKeys.includes(trackKey);
+                const playlistAction = customPlaylist && (playlistAddMode || !showingLibrary)
+                    ? `<button class="playlist-track-action material-icon-button ${playlistAddMode ? '' : 'remove-from-playlist'}"
+                        title="${playlistAddMode ? (isInCustomPlaylist ? 'Já está na playlist' : 'Adicionar à playlist') : 'Remover da playlist'}"
+                        aria-label="${playlistAddMode ? (isInCustomPlaylist ? 'Já está na playlist' : 'Adicionar à playlist') : 'Remover da playlist'}"
+                        ${playlistAddMode && isInCustomPlaylist ? 'disabled' : ''}
+                        onclick="event.stopPropagation(); ${playlistAddMode ? 'addTrackToCustomPlaylist' : 'removeTrackFromCustomPlaylist'}(${index})">
+                        <span class="material-symbols-rounded" aria-hidden="true">${playlistAddMode ? (isInCustomPlaylist ? 'check' : 'playlist_add') : 'playlist_remove'}</span>
+                    </button>`
+                    : '';
+                return `
                 <li class="track-item ${index === currentTrack ? 'active' : ''}" 
                     onclick="playTrack(${index})">
-                    <span class="track-number">${(index + 1).toString().padStart(2, '0')}</span>
+                    <span class="track-number">${(visibleIndex + 1).toString().padStart(2, '0')}</span>
                     <div class="track-info-small">
                         <div class="track-title-small">${escapeHTML(track.title)}</div>
                         <div class="artist-name-small">${escapeHTML(track.artist)}</div>
                     </div>
-                    <span class="track-duration">${track.duration}</span>
-                ${track.blobId ? `<button class="remove-track material-icon-button" title="Remover música" aria-label="Remover música" onclick="event.stopPropagation(); removeTrack(${index})"><span class="material-symbols-rounded" aria-hidden="true">delete</span></button>` : ''}
-                <button class="remove-track material-icon-button" title="Editar música" aria-label="Editar música" onclick="event.stopPropagation(); editTrack(${index})"><span class="material-symbols-rounded" aria-hidden="true">edit</span></button>
+                    <span class="track-duration">${escapeHTML(track.duration || '0:00')}</span>
+                    ${playlistAction}
+                    ${showingLibrary && track.blobId ? `<button class="remove-track material-icon-button" title="Remover música" aria-label="Remover música" onclick="event.stopPropagation(); removeTrack(${index})"><span class="material-symbols-rounded" aria-hidden="true">delete</span></button>` : ''}
+                    ${showingLibrary ? `<button class="remove-track material-icon-button" title="Editar música" aria-label="Editar música" onclick="event.stopPropagation(); editTrack(${index})"><span class="material-symbols-rounded" aria-hidden="true">edit</span></button>` : ''}
                 </li>
-            `).join('');
+            `}).join('');
             
-            // Mostra ou esconde o botão de limpar playlist
-            clearButton.style.display = playlist.some(track => !track.blobId) ? 'block' : 'none';
+            clearButton.style.display = showingLibrary && playlist.some(track => !track.blobId) ? 'block' : 'none';
             
             adjustFontSize();
         }
