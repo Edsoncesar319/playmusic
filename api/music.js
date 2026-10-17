@@ -1,4 +1,5 @@
 import { list } from '@vercel/blob';
+import { decodeBlobFileName } from '../lib/blob-path.js';
 import { getCurrentUser } from '../lib/auth.js';
 import { sendJson, sendServerError } from '../lib/http.js';
 
@@ -21,7 +22,7 @@ function getTrackId(pathname, type) {
 }
 
 function getTrackDetails(pathname) {
-    const fileName = pathname.split('/').pop() ?? '';
+    const fileName = decodeBlobFileName(pathname);
     const nameWithoutExtension = fileName.replace(/\.[^.]+$/, '');
     const metadata = nameWithoutExtension.split(' -- ');
     if (metadata.length >= 3) {

@@ -2393,7 +2393,7 @@
                 .trim();
             const safeBaseName = (baseName && baseName !== '.' && baseName !== '..' ? baseName : 'media')
                 .slice(0, 180 - extension.length);
-            return `${safeBaseName}${extension}`;
+            return encodeURIComponent(`${safeBaseName}${extension}`);
         }
 
         function getImageExtension(contentType) {

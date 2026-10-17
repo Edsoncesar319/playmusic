@@ -1,5 +1,6 @@
 import { issueSignedToken } from '@vercel/blob';
 import { handleUploadPresigned } from '@vercel/blob/client';
+import { isValidUploadPath } from '../lib/blob-path.js';
 import { getCurrentUser } from '../lib/auth.js';
 import { isSameOrigin, sendJson, sendServerError } from '../lib/http.js';
 
@@ -21,8 +22,6 @@ const imageTypes = [
     'image/png',
     'image/webp',
 ];
-
-const uploadPathPattern = /^(music|covers)\/[0-9a-f-]{36}\/[\p{L}\p{N}._ -]{1,180}$/iu;
 
 export default async function handler(request, response) {
     if (request.method !== 'POST') {
@@ -52,7 +51,7 @@ export default async function handler(request, response) {
             body: request.body,
             request,
             getSignedToken: async (pathname) => {
-                if (!uploadPathPattern.test(pathname)) {
+                if (!isValidUploadPath(pathname)) {
                     throw new Error('Caminho de upload inválido.');
                 }
 

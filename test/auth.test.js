@@ -8,6 +8,7 @@ import {
     verifyPassword,
 } from '../lib/auth.js';
 import { getDb } from '../lib/db.js';
+import { decodeBlobFileName, encodeBlobFileName, isValidUploadPath } from '../lib/blob-path.js';
 import { isSameOrigin, readJsonBody, sendServerError } from '../lib/http.js';
 
 test('normalizes and validates account emails', () => {
@@ -95,4 +96,16 @@ test('accepts the Neon integration database URL when DATABASE_URL is not defined
         if (neonIntegrationUrl === undefined) delete process.env.Musickera_DATABASE_URL;
         else process.env.Musickera_DATABASE_URL = neonIntegrationUrl;
     }
+});
+
+test('encodes accented Blob filenames while preserving their displayed names', () => {
+    const fileName = 'Ainda Amo Você 1.mp3';
+    const encodedFileName = encodeBlobFileName(fileName);
+    const pathname = `music/01f66aa7-f458-42fa-bd5a-b1be7fdf0fb9/${encodedFileName}`;
+
+    assert.match(encodedFileName, /^[\x00-\x7F]+$/);
+    assert.equal(decodeBlobFileName(pathname), fileName);
+    assert.equal(isValidUploadPath(pathname), true);
+    assert.equal(isValidUploadPath(pathname.replace('%20', '%2F')), false);
+    assert.equal(isValidUploadPath('music/not-a-track-id/song.mp3'), false);
 });

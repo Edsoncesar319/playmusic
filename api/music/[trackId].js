@@ -1,4 +1,5 @@
 import { del, list, rename } from '@vercel/blob';
+import { encodeBlobFileName } from '../../lib/blob-path.js';
 import { getCurrentUser } from '../../lib/auth.js';
 import { isSameOrigin, readJsonBody, sendJson, sendServerError } from '../../lib/http.js';
 
@@ -84,7 +85,9 @@ export default async function handler(request, response) {
         const musicBlob = musicBlobs.find(blob => blob.pathname.startsWith(`music/${trackId}/`));
         const oldFileName = musicBlob.pathname.split('/').pop();
         const extension = oldFileName.match(/\.[^.]+$/)?.[0] ?? '.mp3';
-        const fileName = `${metadata.artist} -- ${metadata.album} -- ${metadata.title}${extension}`;
+        const fileName = encodeBlobFileName(
+            `${metadata.artist} -- ${metadata.album} -- ${metadata.title}${extension}`
+        );
         const newPathname = `music/${trackId}/${fileName}`;
         if (musicBlob.pathname !== newPathname) {
             await rename(musicBlob.url, newPathname, { access: 'public' });
