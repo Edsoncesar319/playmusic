@@ -41,24 +41,30 @@
             place-items: center;
             background: #121212;
             pointer-events: none;
-            animation: startupSplashExit 0.65s ease 1.15s forwards;
+            visibility: hidden;
+            opacity: 0;
         }
 
-        .startup-splash-content {
+        .startup-splash.is-visible {
+            visibility: visible;
+            animation: startupSplashExit 0.65s ease 2.35s forwards;
+        }
+
+        .startup-splash.is-visible .startup-splash-content {
             display: grid;
             justify-items: center;
             gap: 18px;
             animation: startupSplashEnter 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) both;
         }
 
-        .startup-splash-bars {
+        .startup-splash.is-visible .startup-splash-bars {
             display: flex;
             align-items: center;
             gap: 7px;
             height: 56px;
         }
 
-        .startup-splash-bars span {
+        .startup-splash.is-visible .startup-splash-bars span {
             width: 8px;
             height: 24px;
             border-radius: 999px;
@@ -67,22 +73,22 @@
             animation: startupEqualizer 0.75s ease-in-out infinite alternate;
         }
 
-        .startup-splash-bars span:nth-child(2) {
+        .startup-splash.is-visible .startup-splash-bars span:nth-child(2) {
             height: 40px;
             animation-delay: 0.16s;
         }
 
-        .startup-splash-bars span:nth-child(3) {
+        .startup-splash.is-visible .startup-splash-bars span:nth-child(3) {
             height: 30px;
             animation-delay: 0.32s;
         }
 
-        .startup-splash-bars span:nth-child(4) {
+        .startup-splash.is-visible .startup-splash-bars span:nth-child(4) {
             height: 46px;
             animation-delay: 0.08s;
         }
 
-        .startup-splash-title {
+        .startup-splash.is-visible .startup-splash-title {
             color: #fff;
             font-size: 28px;
             font-weight: 800;
@@ -120,10 +126,11 @@
             .startup-splash {
                 visibility: hidden;
                 animation: none;
+                opacity: 0;
             }
 
-            .startup-splash-content,
-            .startup-splash-bars span {
+            .startup-splash.is-visible .startup-splash-content,
+            .startup-splash.is-visible .startup-splash-bars span {
                 animation: none;
             }
         }
@@ -1341,7 +1348,7 @@
     <script src="https://cdn.jsdelivr.net/npm/jsmediatags@3.9.7/dist/jsmediatags.min.js"></script>
 </head>
 <body>
-    <div class="startup-splash" aria-hidden="true">
+    <div class="startup-splash is-visible" id="startupSplash" aria-hidden="true">
         <div class="startup-splash-content">
             <div class="startup-splash-bars">
                 <span></span>
@@ -1449,6 +1456,14 @@
         let repeatMode = 'none'; // 'none', 'one', 'all'
         let currentUser = null;
         let storageProviderPromise = null;
+
+        const startupSplash = document.getElementById('startupSplash');
+        window.addEventListener('pointerdown', () => {
+            if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+            startupSplash.classList.remove('is-visible');
+            void startupSplash.offsetWidth;
+            startupSplash.classList.add('is-visible');
+        });
 
         // Configuração do IndexedDB
         const dbName = 'MusickeraDB';
