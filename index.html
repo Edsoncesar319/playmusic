@@ -831,6 +831,11 @@
             color: #ff7777 !important;
         }
 
+        .playlist-track-action:disabled {
+            cursor: default;
+            opacity: 0.55;
+        }
+
         .upload-button {
             background: #1DB954;
             color: #fff;
@@ -1690,7 +1695,8 @@
                     customPlaylists.length = 0;
                     customPlaylists.push(...request.result.map(item => ({
                         ...item,
-                        trackKeys: Array.isArray(item.trackKeys) ? item.trackKeys : []
+                        trackKeys: Array.isArray(item.trackKeys) ? item.trackKeys : [],
+                        trackData: item.trackData && typeof item.trackData === 'object' ? item.trackData : {}
                     })));
                     renderCustomPlaylistControls();
                     resolve();
@@ -1822,7 +1828,8 @@
             // Atualiza a lista de reprodução
             const trackItems = document.querySelectorAll('.track-item');
             trackItems.forEach((item, index) => {
-                item.classList.toggle('active', index === currentTrack);
+                const trackIndex = Number(item.dataset.trackIndex ?? index);
+                item.classList.toggle('active', trackIndex === currentTrack);
             });
         }
 
@@ -2293,6 +2300,7 @@
                     : '';
                 return `
                 <li class="track-item ${index === currentTrack ? 'active' : ''}" 
+                    data-track-index="${index}"
                     onclick="playTrack(${index})">
                     <span class="track-number">${(visibleIndex + 1).toString().padStart(2, '0')}</span>
                     <div class="track-info-small">
@@ -2411,7 +2419,8 @@
             } else if (repeatMode === 'all') {
                 nextTrack();
             } else {
-                if (currentTrack < playlist.length - 1) {
+                const queue = getPlaybackTrackIndexes();
+                if (queue.indexOf(currentTrack) < queue.length - 1) {
                     nextTrack();
                 }
             }
@@ -3094,6 +3103,14 @@
                 
                 updatePlaylistHTML();
                 await updateMusicList();
+                for (const customPlaylist of customPlaylists) {
+                    for (const key of customPlaylist.trackKeys) {
+                        if (playlist.some(track => getTrackKey(track) === key)) continue;
+                        const savedTrack = customPlaylist.trackData[key];
+                        if (savedTrack) playlist.push({ ...savedTrack });
+                    }
+                }
+                sortPlaylist();
                 if (playlist.length > 0) {
                     currentTrack = 0;
                     loadTrack();
