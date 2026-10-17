@@ -1434,12 +1434,8 @@
                     <button class="upload-button" onclick="document.getElementById('fileInput').click()">
                         <span class="material-symbols-rounded" aria-hidden="true">upload_file</span> Upload
                     </button>
-                    <button class="upload-button" onclick="document.getElementById('coverInput').click()">
-                        <span class="material-symbols-rounded" aria-hidden="true">image</span> Capa
-                    </button>
                 </div>
                 <input type="file" id="fileInput" accept="audio/*" multiple onchange="handleFileUpload(event)" style="display: none;">
-                <input type="file" id="coverInput" accept="image/jpeg,image/png,image/webp,image/gif" onchange="handleCoverUpload(event)" style="display: none;">
                 <ul class="track-list">
                     <!-- A lista será preenchida dinamicamente pelo JavaScript -->
                 </ul>
@@ -2530,32 +2526,6 @@
             } catch (error) {
                 if (error.status === 401) clearUserState('Sua sessão expirou. Entre novamente.');
                 else alert(`Não foi possível atualizar a música: ${error.message}`);
-            }
-        }
-
-        async function handleCoverUpload(event) {
-            const file = event.target.files[0];
-            event.target.value = '';
-            if (!file) return;
-
-            const track = playlist[currentTrack];
-            if (!track || !track.blobId) {
-                alert('Selecione uma música já enviada ao Blob antes de adicionar uma capa.');
-                return;
-            }
-
-            try {
-                const extension = getImageExtension(file.type);
-                const uploadedCover = await uploadToBackend(
-                    file,
-                    `covers/${track.blobId}/${sanitizeBlobFileName(file.name || `cover.${extension}`)}`
-                );
-                track.cover = uploadedCover.url;
-                updatePlayerInfo(track);
-                updatePlaylistHTML();
-            } catch (error) {
-                console.error('Erro ao enviar a capa para o backend:', error);
-                alert(`Não foi possível enviar a capa: ${error.message}`);
             }
         }
 
