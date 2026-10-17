@@ -47,14 +47,15 @@
 
         .startup-splash.is-visible {
             visibility: visible;
-            animation: startupSplashExit 0.65s ease 2.35s forwards;
+            opacity: 1;
+            animation: startupSplashExit 0.9s ease 3s forwards;
         }
 
         .startup-splash.is-visible .startup-splash-content {
             display: grid;
             justify-items: center;
             gap: 18px;
-            animation: startupSplashEnter 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+            animation: startupSplashEnter 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) both;
         }
 
         .startup-splash.is-visible .startup-splash-bars {
@@ -70,7 +71,7 @@
             border-radius: 999px;
             background: linear-gradient(180deg, #1ed760, #169c46);
             transform: scaleY(0.45);
-            animation: startupEqualizer 0.75s ease-in-out infinite alternate;
+            animation: startupEqualizer 1s ease-in-out infinite alternate;
         }
 
         .startup-splash.is-visible .startup-splash-bars span:nth-child(2) {
@@ -123,7 +124,7 @@
         }
 
         @media (prefers-reduced-motion: reduce) {
-            .startup-splash {
+            .startup-splash.is-visible {
                 visibility: hidden;
                 animation: none;
                 opacity: 0;
