@@ -2221,14 +2221,13 @@
             if (!customPlaylist || !key || customPlaylist.trackKeys.includes(key)) return;
 
             try {
+                const snapshot = getCustomPlaylistTrackSnapshot(track);
                 const updatedPlaylist = {
                     ...customPlaylist,
                     trackKeys: [...customPlaylist.trackKeys, key],
                     trackData: {
                         ...customPlaylist.trackData,
-                        ...(getCustomPlaylistTrackSnapshot(track)
-                            ? { [key]: getCustomPlaylistTrackSnapshot(track) }
-                            : {})
+                        ...(snapshot ? { [key]: snapshot } : {})
                     }
                 };
                 await saveCustomPlaylistToDB(updatedPlaylist);
