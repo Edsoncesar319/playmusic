@@ -14,8 +14,11 @@ Um player de música web moderno e responsivo com suporte a upload de músicas, 
 
 - **Playlist**
   - Lista de reprodução organizada
-  - Busca de músicas
+  - Busca na biblioteca pessoal e no Deezer
+  - Atalhos para busca e playlists nos sites oficiais do Deezer e YouTube Music
+  - Reprodução de prévias e player oficial quando disponíveis
   - Upload de novas músicas
+  - Download dos arquivos enviados à biblioteca
   - Visualização de capas de álbum
   - Informações de artista e álbum
 
@@ -140,7 +143,9 @@ Os cookies de sessão são `HttpOnly`, `Secure` e `SameSite=Lax`; as senhas são
 
 ### Playlist
 - Clique em uma música para reproduzi-la
-- Use a barra de busca para filtrar músicas
+- Selecione **Minha biblioteca** para filtrar suas músicas por título, artista ou álbum
+- Selecione **Deezer** para buscar faixas e adicioná-las à fila pelo player oficial; use **YouTube Music** para abrir a busca oficial
+- Cole um link de faixa ou playlist do Deezer/YouTube Music para abri-lo no serviço correspondente
 - Clique no botão de upload para adicionar novas músicas
 - As músicas são organizadas automaticamente por artista e álbum
 
@@ -149,6 +154,9 @@ Os cookies de sessão são `HttpOnly`, `Secure` e `SameSite=Lax`; as senhas são
 - Selecione um ou mais arquivos de música
 - Aguarde o upload ser concluído
 - As novas músicas aparecerão automaticamente na playlist
+- Use o ícone de download para baixar um arquivo que você enviou
+
+O player não baixa nem converte áudio do YouTube Music ou Deezer. Links e playlists externos permanecem nos serviços oficiais; o download está disponível somente para arquivos enviados à biblioteca.
 
 ## 🔒 Segurança
 
