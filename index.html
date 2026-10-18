@@ -1471,6 +1471,7 @@
                     <option value="library">Minha biblioteca</option>
                     <option value="deezer">Deezer</option>
                     <option value="youtube">YouTube Music</option>
+                    <option value="suamusica">Sua Música</option>
                 </select>
                 <div class="search-bar">
                     <span class="search-icon">
@@ -3117,9 +3118,13 @@
 
         function getOfficialSearchUrl(query, platform) {
             const encodedQuery = encodeURIComponent(query);
-            return platform === 'youtube'
-                ? `https://music.youtube.com/search?q=${encodedQuery}`
-                : `https://www.deezer.com/search/${encodedQuery}`;
+            if (platform === 'youtube') {
+                return `https://music.youtube.com/search?q=${encodedQuery}`;
+            }
+            if (platform === 'suamusica') {
+                return `https://www.suamusica.com.br/search?q=${encodedQuery}`;
+            }
+            return `https://www.deezer.com/search/${encodedQuery}`;
         }
 
         function getSupportedMusicUrl(value) {
@@ -3127,7 +3132,8 @@
                 const url = new URL(value);
                 const host = url.hostname.toLowerCase();
                 const supportedHost = host === 'deezer.com' || host.endsWith('.deezer.com') ||
-                    host === 'youtube.com' || host.endsWith('.youtube.com') || host === 'youtu.be';
+                    host === 'youtube.com' || host.endsWith('.youtube.com') || host === 'youtu.be' ||
+                    host === 'suamusica.com.br' || host.endsWith('.suamusica.com.br');
                 return url.protocol === 'https:' && supportedHost ? url.href : '';
             } catch {
                 return '';
@@ -3157,26 +3163,36 @@
                 return;
             }
 
-            if (platform === 'youtube') {
+            if (platform === 'youtube' || platform === 'suamusica') {
+                const serviceName = platform === 'youtube' ? 'YouTube Music' : 'Sua Música';
                 displaySearchMessage(
-                    'A busca do YouTube Music abre os resultados oficiais. Playlists e vídeos permanecem no serviço.',
+                    `A busca do ${serviceName} abre os resultados oficiais. Playlists e músicas permanecem no serviço.`,
                     getOfficialSearchUrl(normalizedQuery, platform),
                     platform
                 );
                 return;
             }
 
-            searchResults.innerHTML = '<div class="search-result-message" role="status">Buscando no Deezer...</div>';
+            searchResults.innerHTML = '<div class="search-result-message" role="status">Buscando faixas e playlists no Deezer...</div>';
             searchResults.style.display = 'block';
 
             try {
-                const response = await fetch(`https://api.deezer.com/search?q=${encodeURIComponent(normalizedQuery)}`);
-                if (!response.ok) throw new Error(`O Deezer respondeu com status ${response.status}.`);
-                const data = await response.json();
-                if (data.error) throw new Error(data.error.message || 'A busca do Deezer falhou.');
+                const encodedQuery = encodeURIComponent(normalizedQuery);
+                const [tracksResponse, playlistsResponse] = await Promise.all([
+                    fetch(`https://api.deezer.com/search?q=${encodedQuery}`),
+                    fetch(`https://api.deezer.com/search/playlist?q=${encodedQuery}`)
+                ]);
+                if (!tracksResponse.ok) throw new Error(`A busca de faixas do Deezer respondeu com status ${tracksResponse.status}.`);
+                if (!playlistsResponse.ok) throw new Error(`A busca de playlists do Deezer respondeu com status ${playlistsResponse.status}.`);
+                const [tracksData, playlistsData] = await Promise.all([
+                    tracksResponse.json(),
+                    playlistsResponse.json()
+                ]);
+                if (tracksData.error) throw new Error(tracksData.error.message || 'A busca de faixas do Deezer falhou.');
+                if (playlistsData.error) throw new Error(playlistsData.error.message || 'A busca de playlists do Deezer falhou.');
                 if (searchId !== activeSearchId) return;
 
-                const results = (Array.isArray(data.data) ? data.data : []).map(track => ({
+                const tracks = (Array.isArray(tracksData.data) ? tracksData.data : []).map(track => ({
                     id: track.id,
                     title: track.title,
                     artist: track.artist?.name || 'Artista desconhecido',
@@ -3184,7 +3200,15 @@
                     album: track.album?.title || '',
                     url: track.link
                 }));
-                displaySearchResults(results, normalizedQuery);
+                const playlists = (Array.isArray(playlistsData.data) ? playlistsData.data : []).map(item => ({
+                    id: item.id,
+                    title: item.title,
+                    owner: item.user?.name || 'Playlist pública',
+                    trackCount: item.nb_tracks,
+                    cover: item.picture_medium || '',
+                    url: item.link
+                }));
+                displaySearchResults(tracks, playlists, normalizedQuery);
             } catch (error) {
                 console.error('Erro na busca:', error);
                 if (searchId !== activeSearchId) return;
@@ -3203,9 +3227,12 @@
                 searchResults.style.display = 'block';
                 return;
             }
-            const serviceName = new URL(safeUrl).hostname.endsWith('youtube.com')
-                ? 'YouTube Music'
-                : platform === 'youtube' ? 'YouTube Music' : 'Deezer';
+            const host = new URL(safeUrl).hostname.toLowerCase();
+            const serviceName = host === 'suamusica.com.br' || host.endsWith('.suamusica.com.br')
+                ? 'Sua Música'
+                : host === 'youtube.com' || host.endsWith('.youtube.com')
+                    ? 'YouTube Music'
+                    : platform === 'youtube' ? 'YouTube Music' : 'Deezer';
             searchResults.innerHTML = `
                 <div class="search-result-message">
                     ${escapeHTML(message)}
@@ -3215,28 +3242,47 @@
             searchResults.style.display = 'block';
         }
 
-        function displaySearchResults(results, query) {
-            if (results.length === 0) {
+        function displaySearchResults(tracks, playlists, query) {
+            if (tracks.length === 0 && playlists.length === 0) {
                 displaySearchMessage(
-                    'Nenhuma faixa encontrada. Também é possível buscar diretamente no site oficial.',
+                    'Nenhuma faixa ou playlist encontrada. Também é possível buscar diretamente no site oficial.',
                     getOfficialSearchUrl(query, 'deezer'),
                     'deezer'
                 );
                 return;
             }
 
-            searchResults.innerHTML = results.map(result => `
+            const trackResults = tracks.map(track => `
                 <div class="search-result-item">
-                    ${result.cover ? `<img src="${escapeHTML(result.cover)}" alt="" class="search-result-cover">` : ''}
+                    ${track.cover ? `<img src="${escapeHTML(track.cover)}" alt="" class="search-result-cover">` : ''}
                     <div class="search-result-info">
-                        <div class="search-result-title">${escapeHTML(result.title)}</div>
-                        <div class="search-result-artist">${escapeHTML(result.artist)}${result.album ? ` · ${escapeHTML(result.album)}` : ''}</div>
+                        <div class="search-result-title">${escapeHTML(track.title)}</div>
+                        <div class="search-result-artist">${escapeHTML(track.artist)}${track.album ? ` · ${escapeHTML(track.album)}` : ''}</div>
                     </div>
-                    <a class="search-result-link" href="${escapeHTML(getSupportedMusicUrl(result.url))}"
+                    <a class="search-result-link" href="${escapeHTML(getSupportedMusicUrl(track.url))}"
                         target="_blank" rel="noopener noreferrer">Abrir</a>
-                    <button type="button" data-deezer-id="${escapeHTML(result.id)}">Adicionar à fila</button>
+                    <button type="button" data-deezer-id="${escapeHTML(track.id)}">Adicionar à fila</button>
                 </div>
             `).join('');
+            const playlistResults = playlists.map(item => `
+                <div class="search-result-item">
+                    ${item.cover ? `<img src="${escapeHTML(item.cover)}" alt="" class="search-result-cover">` : ''}
+                    <div class="search-result-info">
+                        <div class="search-result-title">${escapeHTML(item.title)}</div>
+                        <div class="search-result-artist">${escapeHTML(item.owner)} · ${escapeHTML(item.trackCount)} músicas</div>
+                    </div>
+                    <a class="search-result-link" href="${escapeHTML(getSupportedMusicUrl(item.url))}"
+                        target="_blank" rel="noopener noreferrer">Abrir playlist</a>
+                </div>
+            `).join('');
+            const officialSearch = getOfficialSearchUrl(query, 'deezer');
+            searchResults.innerHTML = `
+                ${playlists.length ? `<div class="search-result-message">Playlists</div>${playlistResults}` : ''}
+                ${tracks.length ? `<div class="search-result-message">Faixas</div>${trackResults}` : ''}
+                <div class="search-result-message">
+                    <a class="search-result-link" href="${escapeHTML(officialSearch)}"
+                        target="_blank" rel="noopener noreferrer">Ver mais resultados no Deezer</a>
+                </div>`;
             searchResults.style.display = 'block';
         }
 
