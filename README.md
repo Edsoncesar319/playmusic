@@ -146,7 +146,7 @@ Os cookies de sessão são `HttpOnly`, `Secure` e `SameSite=Lax`; as senhas são
 - Selecione **Minha biblioteca** para filtrar suas músicas por título, artista ou álbum
 - Selecione **Deezer** para buscar faixas e playlists públicas; faixas podem ser adicionadas à fila como prévias e playlists abrem no Deezer
 - Selecione **YouTube Music** ou **Sua Música** para abrir os resultados oficiais de busca no serviço
-- Cole um link de faixa ou playlist do Deezer/YouTube Music para abri-lo no serviço correspondente
+- Cole um link de faixa ou playlist do Deezer, YouTube Music ou Sua Música para abri-lo no serviço correspondente
 - Clique no botão de upload para adicionar novas músicas
 - As músicas são organizadas automaticamente por artista e álbum
 
@@ -157,7 +157,7 @@ Os cookies de sessão são `HttpOnly`, `Secure` e `SameSite=Lax`; as senhas são
 - As novas músicas aparecerão automaticamente na playlist
 - Use o ícone de download para baixar um arquivo que você enviou
 
-O player não baixa nem converte áudio do YouTube Music ou Deezer. Links e playlists externos permanecem nos serviços oficiais; o download está disponível somente para arquivos enviados à biblioteca.
+O player não baixa nem converte áudio dos serviços externos. Links e playlists permanecem nos serviços oficiais; o download está disponível somente para arquivos enviados à biblioteca.
 
 ## 🔒 Segurança
 

@@ -3178,20 +3178,36 @@
 
             try {
                 const encodedQuery = encodeURIComponent(normalizedQuery);
-                const [tracksResponse, playlistsResponse] = await Promise.all([
-                    fetch(`https://api.deezer.com/search?q=${encodedQuery}`),
-                    fetch(`https://api.deezer.com/search/playlist?q=${encodedQuery}`)
+                const [tracksSearch, playlistsSearch] = await Promise.allSettled([
+                    fetch(`https://api.deezer.com/search?q=${encodedQuery}`).then(async response => {
+                        if (!response.ok) throw new Error(`A busca de faixas do Deezer respondeu com status ${response.status}.`);
+                        return response.json();
+                    }),
+                    fetch(`https://api.deezer.com/search/playlist?q=${encodedQuery}`).then(async response => {
+                        if (!response.ok) throw new Error(`A busca de playlists do Deezer respondeu com status ${response.status}.`);
+                        return response.json();
+                    })
                 ]);
-                if (!tracksResponse.ok) throw new Error(`A busca de faixas do Deezer respondeu com status ${tracksResponse.status}.`);
-                if (!playlistsResponse.ok) throw new Error(`A busca de playlists do Deezer respondeu com status ${playlistsResponse.status}.`);
-                const [tracksData, playlistsData] = await Promise.all([
-                    tracksResponse.json(),
-                    playlistsResponse.json()
-                ]);
-                if (tracksData.error) throw new Error(tracksData.error.message || 'A busca de faixas do Deezer falhou.');
-                if (playlistsData.error) throw new Error(playlistsData.error.message || 'A busca de playlists do Deezer falhou.');
                 if (searchId !== activeSearchId) return;
 
+                const tracksError = tracksSearch.status === 'rejected'
+                    ? tracksSearch.reason
+                    : tracksSearch.value.error
+                        ? new Error(tracksSearch.value.error.message || 'A busca de faixas do Deezer falhou.')
+                        : null;
+                const playlistsError = playlistsSearch.status === 'rejected'
+                    ? playlistsSearch.reason
+                    : playlistsSearch.value.error
+                        ? new Error(playlistsSearch.value.error.message || 'A busca de playlists do Deezer falhou.')
+                        : null;
+                if (tracksError && playlistsError) {
+                    throw new Error(`${tracksError.message} ${playlistsError.message}`);
+                }
+                if (tracksError) console.error('Erro na busca de faixas do Deezer:', tracksError);
+                if (playlistsError) console.error('Erro na busca de playlists do Deezer:', playlistsError);
+
+                const tracksData = tracksError ? { data: [] } : tracksSearch.value;
+                const playlistsData = playlistsError ? { data: [] } : playlistsSearch.value;
                 const tracks = (Array.isArray(tracksData.data) ? tracksData.data : []).map(track => ({
                     id: track.id,
                     title: track.title,
@@ -3208,7 +3224,12 @@
                     cover: item.picture_medium || '',
                     url: item.link
                 }));
-                displaySearchResults(tracks, playlists, normalizedQuery);
+                const searchWarning = tracksError
+                    ? 'Não foi possível carregar as faixas; exibindo as playlists disponíveis.'
+                    : playlistsError
+                        ? 'Não foi possível carregar as playlists; exibindo as faixas disponíveis.'
+                        : '';
+                displaySearchResults(tracks, playlists, normalizedQuery, searchWarning);
             } catch (error) {
                 console.error('Erro na busca:', error);
                 if (searchId !== activeSearchId) return;
@@ -3242,10 +3263,10 @@
             searchResults.style.display = 'block';
         }
 
-        function displaySearchResults(tracks, playlists, query) {
+        function displaySearchResults(tracks, playlists, query, warning = '') {
             if (tracks.length === 0 && playlists.length === 0) {
                 displaySearchMessage(
-                    'Nenhuma faixa ou playlist encontrada. Também é possível buscar diretamente no site oficial.',
+                    warning || 'Nenhuma faixa ou playlist encontrada. Também é possível buscar diretamente no site oficial.',
                     getOfficialSearchUrl(query, 'deezer'),
                     'deezer'
                 );
@@ -3277,6 +3298,7 @@
             `).join('');
             const officialSearch = getOfficialSearchUrl(query, 'deezer');
             searchResults.innerHTML = `
+                ${warning ? `<div class="search-result-message" role="status">${escapeHTML(warning)}</div>` : ''}
                 ${playlists.length ? `<div class="search-result-message">Playlists</div>${playlistResults}` : ''}
                 ${tracks.length ? `<div class="search-result-message">Faixas</div>${trackResults}` : ''}
                 <div class="search-result-message">
