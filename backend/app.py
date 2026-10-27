@@ -23,6 +23,7 @@ from pydantic import BaseModel
 
 
 ROOT_DIR = Path(__file__).resolve().parent.parent
+PUBLIC_DIR = ROOT_DIR / "public"
 DATA_DIR = Path(os.environ.get("MUSICKERA_DATA_DIR", ROOT_DIR / "data")).resolve()
 UPLOAD_DIR = DATA_DIR / "uploads"
 DATABASE_PATH = DATA_DIR / "musickera.sqlite3"
@@ -328,20 +329,26 @@ def valid_music_metadata(title: str, artist: str, album: str) -> bool:
     )
 
 
+def page_file(name: str) -> FileResponse:
+    public_file = PUBLIC_DIR / name
+    root_file = ROOT_DIR / name
+    return FileResponse(public_file if public_file.is_file() else root_file)
+
+
 @app.get("/", include_in_schema=False)
 async def home() -> FileResponse:
-    return FileResponse(ROOT_DIR / "index.html")
+    return page_file("index.html")
 
 
 @app.get("/login", include_in_schema=False)
 @app.get("/login.html", include_in_schema=False)
 async def login_page() -> FileResponse:
-    return FileResponse(ROOT_DIR / "login.html")
+    return page_file("login.html")
 
 
 @app.get("/favicon.ico", include_in_schema=False)
 async def favicon() -> FileResponse:
-    return FileResponse(ROOT_DIR / "favicon.ico")
+    return page_file("favicon.ico")
 
 
 @app.get("/api/health")
