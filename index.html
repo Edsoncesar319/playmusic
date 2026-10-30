@@ -2662,11 +2662,18 @@
                         </div>
                         <select class="equalizer-preset" id="equalizerPreset" aria-label="Predefinição do equalizador">
                             <option value="flat">Plano</option>
+                            <option value="acoustic">Acústico</option>
+                            <option value="bassBooster">Bass Booster</option>
+                            <option value="bassReduce">Bass Reduce</option>
+                            <option value="dance">Dance</option>
+                            <option value="deep">Deep</option>
                             <option value="pop">Pop</option>
                             <option value="rock">Rock</option>
                             <option value="jazz">Jazz</option>
                             <option value="classical">Clássico</option>
                             <option value="voice">Voz</option>
+                            <option value="trebleBooster">Treble Booster</option>
+                            <option value="voiceBooster">Voz Booster</option>
                             <option value="custom">Personalizado</option>
                         </select>
                         <div class="equalizer-bands">
@@ -2770,11 +2777,18 @@
         let storageProviderPromise = null;
         const equalizerPresets = {
             flat: [0, 0, 0, 0, 0],
+            acoustic: [3, 2, 1, 2, 3],
+            bassBooster: [8, 5, 1, 0, -1],
+            bassReduce: [-8, -5, -2, 0, 1],
+            dance: [6, 4, 1, 3, 5],
+            deep: [7, 4, -2, -3, 2],
             pop: [-1, 2, 4, 2, -1],
             rock: [5, 3, -1, 3, 5],
             jazz: [3, 2, -1, 2, 4],
             classical: [4, 2, -1, 2, 3],
-            voice: [-3, -1, 3, 4, 2]
+            voice: [-3, -1, 3, 4, 2],
+            trebleBooster: [-1, -2, 0, 5, 8],
+            voiceBooster: [-4, -2, 4, 6, 3]
         };
 
         // Configuração do IndexedDB
