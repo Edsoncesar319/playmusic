@@ -726,7 +726,7 @@
             display: flex;
             align-items: center;
             gap: 12px;
-            margin-top: 32px;
+            margin-top: 0;
             padding: 12px;
             background: rgba(255, 255, 255, 0.05);
             border-radius: 24px;
@@ -766,6 +766,126 @@
         .volume-slider::-webkit-slider-thumb:hover {
             transform: scale(1.2);
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .audio-tools {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 32px;
+            position: relative;
+        }
+
+        .equalizer-toggle {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            min-height: 44px;
+            padding: 0 14px;
+            border: 0;
+            border-radius: 24px;
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s ease, color 0.2s ease;
+        }
+
+        .equalizer-toggle:hover,
+        .equalizer-toggle[aria-expanded="true"] {
+            background: rgba(29, 185, 84, 0.18);
+            color: #1ed760;
+        }
+
+        .equalizer-toggle .material-symbols-rounded {
+            font-size: 20px;
+        }
+
+        .equalizer-panel {
+            position: absolute;
+            z-index: 20;
+            right: 0;
+            bottom: calc(100% + 12px);
+            display: grid;
+            gap: 16px;
+            width: 340px;
+            padding: 18px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 16px;
+            background: #181818;
+            box-shadow: 0 12px 36px rgba(0, 0, 0, 0.5);
+        }
+
+        .equalizer-panel[hidden] {
+            display: none;
+        }
+
+        .equalizer-heading,
+        .equalizer-panel-header,
+        .equalizer-band-heading {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .equalizer-panel-header h3 {
+            font-size: 16px;
+        }
+
+        .equalizer-preset {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            border-radius: 10px;
+            background: #242424;
+            color: #fff;
+            font-size: 14px;
+        }
+
+        .equalizer-bands {
+            display: grid;
+            gap: 12px;
+        }
+
+        .equalizer-band-heading {
+            margin-bottom: 5px;
+            color: rgba(255, 255, 255, 0.78);
+            font-size: 12px;
+        }
+
+        .equalizer-band-heading output {
+            color: #1ed760;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .equalizer-band input {
+            width: 100%;
+            accent-color: #1ed760;
+        }
+
+        .equalizer-status {
+            min-height: 16px;
+            color: rgba(255, 255, 255, 0.58);
+            font-size: 11px;
+            line-height: 1.4;
+        }
+
+        .equalizer-reset {
+            justify-self: end;
+            padding: 7px 12px;
+            border: 1px solid rgba(255, 255, 255, 0.16);
+            border-radius: 18px;
+            background: transparent;
+            color: #fff;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        .equalizer-reset:hover {
+            background: rgba(255, 255, 255, 0.1);
         }
 
         .playlist {
@@ -1142,12 +1262,15 @@
             }
 
             .volume-container {
-                margin-top: 20px;
                 padding: 8px;
             }
 
             .volume-slider {
                 width: 100px;
+            }
+
+            .audio-tools {
+                margin-top: 20px;
             }
         }
 
@@ -1206,12 +1329,27 @@
             }
 
             .volume-container {
-                margin-top: 16px;
                 padding: 6px;
             }
 
             .volume-slider {
                 width: 80px;
+            }
+
+            .audio-tools {
+                gap: 6px;
+                margin-top: 16px;
+            }
+
+            .equalizer-toggle {
+                min-height: 38px;
+                padding: 0 10px;
+            }
+
+            .equalizer-panel {
+                right: -4px;
+                width: min(320px, calc(100vw - 32px));
+                padding: 14px;
             }
 
             .track-item {
@@ -2027,8 +2165,11 @@
 
         .player-section.view-player .volume-container {
             justify-content: center;
-            margin-top: 18px;
             background: transparent;
+        }
+
+        .player-section.view-player .audio-tools {
+            margin-top: 18px;
         }
 
         .playlist {
@@ -2506,9 +2647,53 @@
                     </button>
                 </div>
 
-                <div class="volume-container">
-                    <span class="material-symbols-rounded" aria-hidden="true">volume_up</span>
-                    <input type="range" class="volume-slider" min="0" max="100" value="100">
+                <div class="audio-tools" id="audioTools">
+                    <div class="volume-container">
+                        <span class="material-symbols-rounded" aria-hidden="true">volume_up</span>
+                        <input type="range" class="volume-slider" min="0" max="100" value="100" aria-label="Volume">
+                    </div>
+                    <button class="equalizer-toggle" id="equalizerToggle" type="button" aria-expanded="false" aria-controls="equalizerPanel">
+                        <span class="material-symbols-rounded" aria-hidden="true">equalizer</span>
+                        Equalizador
+                    </button>
+                    <section class="equalizer-panel" id="equalizerPanel" aria-label="Configurações do equalizador" hidden>
+                        <div class="equalizer-panel-header">
+                            <h3>Equalizador</h3>
+                        </div>
+                        <select class="equalizer-preset" id="equalizerPreset" aria-label="Predefinição do equalizador">
+                            <option value="flat">Plano</option>
+                            <option value="pop">Pop</option>
+                            <option value="rock">Rock</option>
+                            <option value="jazz">Jazz</option>
+                            <option value="classical">Clássico</option>
+                            <option value="voice">Voz</option>
+                            <option value="custom">Personalizado</option>
+                        </select>
+                        <div class="equalizer-bands">
+                            <label class="equalizer-band">
+                                <span class="equalizer-band-heading"><span>Graves · 60 Hz</span><output>0 dB</output></span>
+                                <input type="range" min="-12" max="12" value="0" data-equalizer-band="0" aria-label="Graves, 60 hertz">
+                            </label>
+                            <label class="equalizer-band">
+                                <span class="equalizer-band-heading"><span>Baixo-médios · 230 Hz</span><output>0 dB</output></span>
+                                <input type="range" min="-12" max="12" value="0" data-equalizer-band="1" aria-label="Baixo-médios, 230 hertz">
+                            </label>
+                            <label class="equalizer-band">
+                                <span class="equalizer-band-heading"><span>Médios · 910 Hz</span><output>0 dB</output></span>
+                                <input type="range" min="-12" max="12" value="0" data-equalizer-band="2" aria-label="Médios, 910 hertz">
+                            </label>
+                            <label class="equalizer-band">
+                                <span class="equalizer-band-heading"><span>Agudos · 3,6 kHz</span><output>0 dB</output></span>
+                                <input type="range" min="-12" max="12" value="0" data-equalizer-band="3" aria-label="Agudos, 3,6 quilohertz">
+                            </label>
+                            <label class="equalizer-band">
+                                <span class="equalizer-band-heading"><span>Brilho · 14 kHz</span><output>0 dB</output></span>
+                                <input type="range" min="-12" max="12" value="0" data-equalizer-band="4" aria-label="Brilho, 14 quilohertz">
+                            </label>
+                        </div>
+                        <p class="equalizer-status" id="equalizerStatus" aria-live="polite"></p>
+                        <button class="equalizer-reset" id="equalizerReset" type="button">Restaurar padrão</button>
+                    </section>
                 </div>
             </div>
 
@@ -2577,9 +2762,20 @@
         let playlistAddMode = false;
         let isPlaying = false;
         let audio = new Audio();
+        let equalizerAudioContext = null;
+        let equalizerFilters = [];
+        let equalizerEnabled = false;
         let repeatMode = 'none'; // 'none', 'one', 'all'
         let currentUser = null;
         let storageProviderPromise = null;
+        const equalizerPresets = {
+            flat: [0, 0, 0, 0, 0],
+            pop: [-1, 2, 4, 2, -1],
+            rock: [5, 3, -1, 3, 5],
+            jazz: [3, 2, -1, 2, 4],
+            classical: [4, 2, -1, 2, 3],
+            voice: [-3, -1, 3, 4, 2]
+        };
 
         // Configuração do IndexedDB
         const dbName = 'MusickeraDB';
@@ -3628,6 +3824,136 @@
 
         document.querySelector('.volume-slider').addEventListener('input', function(e) {
             audio.volume = e.target.value / 100;
+        });
+
+        const equalizerToggle = document.getElementById('equalizerToggle');
+        const equalizerPanel = document.getElementById('equalizerPanel');
+        const equalizerPreset = document.getElementById('equalizerPreset');
+        const equalizerStatus = document.getElementById('equalizerStatus');
+        const equalizerBandInputs = Array.from(document.querySelectorAll('[data-equalizer-band]'));
+
+        function hasSupportedEqualizerSource() {
+            const track = playlist[currentTrack];
+            if (!track || track.source === 'deezer' || track.source === 'youtube') return false;
+
+            const source = audio.currentSrc || audio.src;
+            if (!source) return false;
+            if (source.startsWith('blob:')) return true;
+
+            try {
+                return new URL(source, window.location.href).origin === window.location.origin;
+            } catch (error) {
+                console.error('Não foi possível verificar a origem do áudio para o equalizador:', error);
+                return false;
+            }
+        }
+
+        function setupEqualizer() {
+            if (equalizerFilters.length > 0) return true;
+            if (!hasSupportedEqualizerSource()) {
+                equalizerStatus.textContent = 'Disponível para músicas locais da biblioteca.';
+                return false;
+            }
+
+            const AudioContextConstructor = window.AudioContext || window.webkitAudioContext;
+            if (!AudioContextConstructor) {
+                equalizerStatus.textContent = 'Seu navegador não oferece suporte ao equalizador.';
+                return false;
+            }
+
+            try {
+                equalizerAudioContext = new AudioContextConstructor();
+                const source = equalizerAudioContext.createMediaElementSource(audio);
+                const frequencies = [60, 230, 910, 3600, 14000];
+                equalizerFilters = frequencies.map((frequency, index) => {
+                    const filter = equalizerAudioContext.createBiquadFilter();
+                    filter.type = index === 0 ? 'lowshelf' : index === frequencies.length - 1 ? 'highshelf' : 'peaking';
+                    filter.frequency.value = frequency;
+                    if (filter.type === 'peaking') filter.Q.value = 1;
+                    return filter;
+                });
+
+                source.connect(equalizerFilters[0]);
+                equalizerFilters.forEach((filter, index) => {
+                    filter.connect(equalizerFilters[index + 1] || equalizerAudioContext.destination);
+                });
+                applyEqualizerValues();
+                if (equalizerAudioContext.state === 'suspended') {
+                    equalizerAudioContext.resume().catch(error => {
+                        console.error('Não foi possível ativar o áudio do equalizador:', error);
+                        equalizerStatus.textContent = 'Não foi possível ativar o equalizador.';
+                    });
+                }
+                equalizerStatus.textContent = 'Equalizador ativo para esta música.';
+                return true;
+            } catch (error) {
+                console.error('Erro ao configurar o equalizador:', error);
+                equalizerStatus.textContent = 'Não foi possível configurar o equalizador.';
+                return false;
+            }
+        }
+
+        function applyEqualizerValues() {
+            equalizerBandInputs.forEach((input, index) => {
+                const gain = Number(input.value);
+                input.parentElement.querySelector('output').textContent = `${gain > 0 ? '+' : ''}${gain} dB`;
+                if (equalizerFilters[index]) equalizerFilters[index].gain.value = gain;
+            });
+        }
+
+        function setEqualizerPreset(presetName) {
+            const values = equalizerPresets[presetName];
+            if (!values) return;
+            equalizerBandInputs.forEach((input, index) => {
+                input.value = values[index];
+            });
+            applyEqualizerValues();
+            equalizerEnabled = true;
+            setupEqualizer();
+        }
+
+        equalizerToggle.addEventListener('click', function() {
+            const isOpen = equalizerToggle.getAttribute('aria-expanded') === 'true';
+            equalizerToggle.setAttribute('aria-expanded', String(!isOpen));
+            equalizerPanel.hidden = isOpen;
+        });
+
+        equalizerPreset.addEventListener('change', function() {
+            if (equalizerPreset.value === 'custom') return;
+            setEqualizerPreset(equalizerPreset.value);
+        });
+
+        equalizerBandInputs.forEach(input => {
+            input.addEventListener('input', function() {
+                equalizerPreset.value = 'custom';
+                equalizerEnabled = true;
+                applyEqualizerValues();
+                setupEqualizer();
+            });
+        });
+
+        document.getElementById('equalizerReset').addEventListener('click', function() {
+            equalizerPreset.value = 'flat';
+            setEqualizerPreset('flat');
+        });
+
+        document.addEventListener('click', function(event) {
+            if (!document.getElementById('audioTools').contains(event.target)) {
+                equalizerPanel.hidden = true;
+                equalizerToggle.setAttribute('aria-expanded', 'false');
+            }
+        });
+
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape' && !equalizerPanel.hidden) {
+                equalizerPanel.hidden = true;
+                equalizerToggle.setAttribute('aria-expanded', 'false');
+                equalizerToggle.focus();
+            }
+        });
+
+        audio.addEventListener('loadedmetadata', function() {
+            if (equalizerEnabled) setupEqualizer();
         });
 
         audio.addEventListener('timeupdate', function() {
