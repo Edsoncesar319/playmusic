@@ -707,6 +707,59 @@
             opacity: 1;
         }
 
+        .lyrics-button[aria-expanded="true"] {
+            color: #1ed760;
+            background: rgba(29, 185, 84, 0.18);
+        }
+
+        .lyrics-panel {
+            width: min(680px, 100%);
+            max-height: min(50vh, 480px);
+            margin: 20px auto 0;
+            padding: 18px;
+            overflow-y: auto;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 14px;
+            background: rgba(0, 0, 0, 0.24);
+            text-align: left;
+        }
+
+        .lyrics-panel[hidden] {
+            display: none;
+        }
+
+        .lyrics-panel-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .lyrics-panel-header h3 {
+            font-size: 16px;
+        }
+
+        .lyrics-close {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            border: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.08);
+            color: #fff;
+            cursor: pointer;
+        }
+
+        .lyrics-content {
+            color: rgba(255, 255, 255, 0.84);
+            font-size: 14px;
+            line-height: 1.8;
+            white-space: pre-wrap;
+        }
+
         .play-button {
             background: #1DB954;
             color: #fff;
@@ -1518,20 +1571,38 @@
             box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
         }
 
-        .deezer-embed iframe {
+        .deezer-embed iframe,
+        .youtube-embed iframe {
             width: 100%;
             height: 100%;
             border: none;
         }
 
+        .youtube-embed {
+            width: 100%;
+            height: 350px;
+            margin: 20px 0;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .external-player-embed[hidden],
+        .progress-container[hidden],
+        .time-info[hidden],
+        .audio-tools[hidden] {
+            display: none;
+        }
+
         @media (max-width: 768px) {
-            .deezer-embed {
+            .deezer-embed,
+            .youtube-embed {
                 height: 250px;
             }
         }
 
         @media (max-width: 480px) {
-            .deezer-embed {
+            .deezer-embed,
+            .youtube-embed {
                 height: 200px;
             }
         }
@@ -2633,6 +2704,8 @@
                     </div>
                 </div>
 
+                <div class="external-player-embed" id="externalPlayerEmbed" hidden></div>
+
                 <div class="progress-container">
                     <div class="progress-bar"></div>
                 </div>
@@ -2655,7 +2728,20 @@
                     <button class="control-button" onclick="toggleRepeat()" id="repeatButton" title="Repetir">
                         <span id="repeatIcon" class="material-symbols-rounded" aria-hidden="true">repeat</span>
                     </button>
+                    <button class="control-button lyrics-button" id="lyricsToggle" type="button" title="Mostrar letra" aria-label="Mostrar letra" aria-expanded="false" aria-controls="lyricsPanel">
+                        <span class="material-symbols-rounded" aria-hidden="true">lyrics</span>
+                    </button>
                 </div>
+
+                <section class="lyrics-panel" id="lyricsPanel" aria-label="Letra da música" hidden>
+                    <div class="lyrics-panel-header">
+                        <h3 id="lyricsHeading">Letra</h3>
+                        <button class="lyrics-close" id="lyricsClose" type="button" aria-label="Fechar letra">
+                            <span class="material-symbols-rounded" aria-hidden="true">close</span>
+                        </button>
+                    </div>
+                    <p class="lyrics-content" id="lyricsContent" aria-live="polite"></p>
+                </section>
 
                 <div class="audio-tools" id="audioTools">
                     <div class="volume-container">
@@ -3300,17 +3386,12 @@
         }
 
         function updatePlayerInfo(track) {
-            if (track.source === 'deezer') {
-                // Para músicas do Deezer, não atualiza o player padrão
-                return;
-            }
-            
             document.querySelector('.track-title').textContent = track.title;
             document.querySelector('.artist-name').textContent = track.artist;
-            document.querySelector('.album-name').textContent = track.album;
+            document.querySelector('.album-name').textContent = track.album || '';
             document.querySelector('.album-cover').src = track.cover || defaultCover;
             document.querySelector('.album-cover').alt = `${track.title} - ${track.artist}`;
-            document.querySelector('.duration').textContent = track.duration;
+            document.querySelector('.duration').textContent = track.duration || '0:00';
             updateMiniPlayer();
             
             // Atualiza a lista de reprodução
@@ -3850,6 +3931,90 @@
             audio.volume = e.target.value / 100;
         });
 
+        const lyricsToggle = document.getElementById('lyricsToggle');
+        const lyricsPanel = document.getElementById('lyricsPanel');
+        const lyricsHeading = document.getElementById('lyricsHeading');
+        const lyricsContent = document.getElementById('lyricsContent');
+        const lyricsCache = new Map();
+        let lyricsRequestController = null;
+        let lyricsRequestId = 0;
+
+        function resetLyricsPanel() {
+            lyricsRequestId += 1;
+            lyricsRequestController?.abort();
+            lyricsRequestController = null;
+            lyricsPanel.hidden = true;
+            lyricsToggle.setAttribute('aria-expanded', 'false');
+            lyricsContent.textContent = '';
+        }
+
+        async function showCurrentTrackLyrics() {
+            const track = playlist[currentTrack];
+            if (!track) {
+                lyricsContent.textContent = 'Nenhuma música selecionada.';
+                return;
+            }
+
+            const artist = String(track.artist || '').trim();
+            const title = String(track.title || '').trim();
+            if (!artist || !title) {
+                lyricsHeading.textContent = 'Letra indisponível';
+                lyricsContent.textContent = 'Não há informações suficientes sobre esta música para buscar a letra.';
+                return;
+            }
+
+            lyricsHeading.textContent = `${title} — ${artist}`;
+            lyricsContent.textContent = 'Buscando letra...';
+            const requestId = ++lyricsRequestId;
+            lyricsRequestController?.abort();
+            lyricsRequestController = new AbortController();
+            const cacheKey = `${artist.toLocaleLowerCase('pt-BR')}|${title.toLocaleLowerCase('pt-BR')}`;
+
+            try {
+                let lyrics = lyricsCache.get(cacheKey);
+                if (lyrics === undefined) {
+                    const lyricsUrl = `https://api.lyrics.ovh/v1/${encodeURIComponent(artist)}/${encodeURIComponent(title)}`;
+                    const response = await fetch(lyricsUrl, { signal: lyricsRequestController.signal });
+                    if (response.status === 404) {
+                        lyrics = null;
+                    } else {
+                        if (!response.ok) {
+                            throw new Error(`O serviço de letras respondeu com status ${response.status}.`);
+                        }
+                        const data = await response.json();
+                        lyrics = typeof data.lyrics === 'string' ? data.lyrics.trim() || null : null;
+                    }
+                    lyricsCache.set(cacheKey, lyrics);
+                }
+
+                if (requestId !== lyricsRequestId) return;
+                lyricsContent.textContent = lyrics || 'Letra não encontrada para esta música.';
+            } catch (error) {
+                if (error.name === 'AbortError') return;
+                console.error('Não foi possível buscar a letra da música:', error);
+                if (requestId === lyricsRequestId) {
+                    lyricsContent.textContent = 'Não foi possível buscar a letra agora. Tente novamente mais tarde.';
+                }
+            }
+        }
+
+        lyricsToggle.addEventListener('click', function() {
+            const isOpen = lyricsToggle.getAttribute('aria-expanded') === 'true';
+            if (isOpen) {
+                resetLyricsPanel();
+                return;
+            }
+
+            lyricsPanel.hidden = false;
+            lyricsToggle.setAttribute('aria-expanded', 'true');
+            showCurrentTrackLyrics();
+        });
+
+        document.getElementById('lyricsClose').addEventListener('click', function() {
+            resetLyricsPanel();
+            lyricsToggle.focus();
+        });
+
         const equalizerToggle = document.getElementById('equalizerToggle');
         const equalizerPanel = document.getElementById('equalizerPanel');
         const equalizerPreset = document.getElementById('equalizerPreset');
@@ -3973,6 +4138,10 @@
                 equalizerPanel.hidden = true;
                 equalizerToggle.setAttribute('aria-expanded', 'false');
                 equalizerToggle.focus();
+            }
+            if (event.key === 'Escape' && !lyricsPanel.hidden) {
+                resetLyricsPanel();
+                lyricsToggle.focus();
             }
         });
 
@@ -4117,61 +4286,58 @@
         function loadTrack() {
             const track = playlist[currentTrack];
             if (!track) return;
-            
-            if (track.source === 'deezer') {
-                // Para músicas do Deezer, carrega o player incorporado
-                const playerContainer = document.querySelector('.player-container');
-                const embedHtml = `
-                    <div class="now-playing">
-                        <img src="${track.cover}" alt="${track.title}" class="album-cover">
-                        <div class="track-info">
-                            <h2 class="track-title">${track.title}</h2>
-                            <p class="artist-name">${track.artist}</p>
-                            <p class="album-name">${track.album}</p>
+            resetLyricsPanel();
+            const externalPlayerEmbed = document.getElementById('externalPlayerEmbed');
+            const progressContainer = document.querySelector('.progress-container');
+            const timeInfo = document.querySelector('.time-info');
+            const audioTools = document.getElementById('audioTools');
+            updatePlayerInfo(track);
+
+            if (track.source === 'deezer' || track.source === 'youtube') {
+                audio.pause();
+                progressContainer.hidden = true;
+                timeInfo.hidden = true;
+                audioTools.hidden = true;
+                externalPlayerEmbed.hidden = false;
+
+                if (track.source === 'deezer') {
+                    externalPlayerEmbed.innerHTML = `
+                        <div class="deezer-embed">
+                            <iframe scrolling="no" frameborder="0" allowTransparency="true"
+                                src="https://www.deezer.com/plugins/player?format=classic&autoplay=${isPlaying ? 1 : 0}&playlist=true&width=700&height=350&color=007FEB&layout=dark&size=medium&type=tracks&id=${track.deezerId}&app_id=1"
+                                width="700" height="350">
+                            </iframe>
                         </div>
-                    </div>
-                    <div class="deezer-embed">
-                        <iframe scrolling="no" frameborder="0" allowTransparency="true" 
-                            src="https://www.deezer.com/plugins/player?format=classic&autoplay=${isPlaying ? 1 : 0}&playlist=true&width=700&height=350&color=007FEB&layout=dark&size=medium&type=tracks&id=${track.deezerId}&app_id=1"
-                            width="700" height="350">
-                        </iframe>
-                    </div>
-                `;
-                playerContainer.innerHTML = embedHtml;
-            } else if (track.source === 'youtube') {
-                // For YouTube Music, create an embedded player
-                const playerContainer = document.querySelector('.player-container');
-                const embedHtml = `
-                    <div class="now-playing">
-                        <img src="${track.cover}" alt="${track.title}" class="album-cover">
-                        <div class="track-info">
-                            <h2 class="track-title">${track.title}</h2>
-                            <p class="artist-name">${track.artist}</p>
+                    `;
+                } else {
+                    externalPlayerEmbed.innerHTML = `
+                        <div class="youtube-embed">
+                            <iframe
+                                width="100%"
+                                height="350"
+                                src="https://www.youtube.com/embed/${track.youtubeId}?autoplay=${isPlaying ? 1 : 0}&enablejsapi=1"
+                                frameborder="0"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                allowfullscreen>
+                            </iframe>
                         </div>
-                    </div>
-                    <div class="youtube-embed">
-                        <iframe 
-                            width="100%" 
-                            height="350" 
-                            src="https://www.youtube.com/embed/${track.youtubeId}?autoplay=${isPlaying ? 1 : 0}&enablejsapi=1" 
-                            frameborder="0" 
-                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                            allowfullscreen>
-                        </iframe>
-                    </div>
-                `;
-                playerContainer.innerHTML = embedHtml;
-            } else {
-                // Para músicas locais, usa o player padrão
-                audio.src = track.file;
-                audio.load();
-                updatePlayerInfo(track);
-                if (isPlaying) {
-                    audio.play().catch(error => {
-                        console.error('Erro ao reproduzir áudio:', error);
-                        alert('Erro ao reproduzir a música. Verifique se o arquivo existe.');
-                    });
+                    `;
                 }
+                return;
+            }
+
+            externalPlayerEmbed.replaceChildren();
+            externalPlayerEmbed.hidden = true;
+            progressContainer.hidden = false;
+            timeInfo.hidden = false;
+            audioTools.hidden = false;
+            audio.src = track.file;
+            audio.load();
+            if (isPlaying) {
+                audio.play().catch(error => {
+                    console.error('Erro ao reproduzir áudio:', error);
+                    alert('Erro ao reproduzir a música. Verifique se o arquivo existe.');
+                });
             }
         }
 
