@@ -98,6 +98,26 @@ test('accepts the Neon integration database URL when DATABASE_URL is not defined
     }
 });
 
+test('rebuilds the database client when the configured URL changes', () => {
+    const databaseUrl = process.env.DATABASE_URL;
+    const neonIntegrationUrl = process.env.Musickera_DATABASE_URL;
+    process.env.DATABASE_URL = 'postgres://first.example/db';
+    delete process.env.Musickera_DATABASE_URL;
+
+    try {
+        const firstClient = getDb();
+        process.env.DATABASE_URL = 'postgres://second.example/db';
+        const secondClient = getDb();
+
+        assert.notEqual(firstClient, secondClient);
+    } finally {
+        if (databaseUrl === undefined) delete process.env.DATABASE_URL;
+        else process.env.DATABASE_URL = databaseUrl;
+        if (neonIntegrationUrl === undefined) delete process.env.Musickera_DATABASE_URL;
+        else process.env.Musickera_DATABASE_URL = neonIntegrationUrl;
+    }
+});
+
 test('encodes accented Blob filenames while preserving their displayed names', () => {
     const fileName = 'Ainda Amo Você 1.mp3';
     const encodedFileName = encodeBlobFileName(fileName);
